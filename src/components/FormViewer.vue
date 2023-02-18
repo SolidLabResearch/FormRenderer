@@ -30,12 +30,12 @@
           <small class="text-danger" v-if="docError">{{ docError }}</small>
           <MDBInput label="N3 Conversion Rules URL" type="url" v-model="rules" style="margin-top: 1rem" />
           <small>Leave this URL empty to not apply any schema alignment tasks.</small>
-          <small class="text-danger" v-if="rulesError">{{ rulesError }}</small>
+          <small class="text-danger" v-if="rulesError"><br>{{ rulesError }}</small>
           <MDBInput label="Schema URL" type="url" v-model="schema" style="margin-top: 1rem" />
           <small class="text-danger" v-if="schemaError">{{ schemaError }}</small>
           <MDBInput label="N3 Conversion Rules URL" type="url" v-model="invertedRules" style="margin-top: 1rem" />
           <small>Rules to convert changes back to the original ontology.</small>
-          <small class="text-danger" v-if="invertedRulesError">{{ invertedRulesError }}</small>
+          <small class="text-danger" v-if="invertedRulesError"><br>{{ invertedRulesError }}</small>
         </MDBCardText>
 
         <MDBBtn color="primary" @click="execute" id="execute-btn">Load</MDBBtn>
@@ -75,11 +75,43 @@ export default {
     };
   },
   created() {
+    // Restore solid session
     handleIncomingRedirect({
       restorePreviousSession: true,
     }).then((info) => {
       this.loggedIn = info.webId;
+
+      // Restore input data - Step 2
+      const query = localStorage.getItem("query");
+      if (query) {
+        const parsedQuery = JSON.parse(query);
+        if (parsedQuery.doc) {
+          this.doc = parsedQuery.doc;
+        }
+        if (parsedQuery.rules) {
+          this.rules = parsedQuery.rules;
+        }
+        if (parsedQuery.schema) {
+          this.schema = parsedQuery.schema;
+        }
+        if (parsedQuery.invertedRules) {
+          this.invertedRules = parsedQuery.invertedRules;
+        }
+      }
     });
+
+    // Restore input data - Step 1
+    // 2 steps because `handleIncomingRedirect` is triggers page reload resulting in loss of query data.
+    this.$watch(
+      () => this.$route.query,
+      () => {
+        const query = this.$route.query;
+        if (Object.keys(query).length && !("code" in query)) {
+          localStorage.setItem("query", JSON.stringify(query));
+        }
+      },
+      { immediate: true }
+    );
   },
   methods: {
     async login() {
@@ -104,6 +136,16 @@ export default {
     async logout() {
       await logout();
       this.loggedIn = undefined;
+    },
+    updateQueryParams() {
+      this.$router.push({
+        query: {
+          doc: this.doc,
+          rules: this.rules,
+          schema: this.schema,
+          invertedRules: this.invertedRules,
+        },
+      });
     },
     async execute(event) {
       event.preventDefault();
@@ -146,6 +188,20 @@ export default {
         content = `@base <${url}> .\n${content}`;
       }
       return content;
+    },
+  },
+  watch: {
+    doc: function () {
+      this.updateQueryParams();
+    },
+    rules: function () {
+      this.updateQueryParams();
+    },
+    schema: function () {
+      this.updateQueryParams();
+    },
+    invertedRules: function () {
+      this.updateQueryParams();
     },
   },
 };
