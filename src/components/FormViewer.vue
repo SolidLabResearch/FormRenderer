@@ -21,12 +21,32 @@
         </MDBCardText>
       </MDBCardBody>
     </MDBCard>
+
+    <MDBCard>
+      <MDBCardBody class="w-100">
+        <MDBCardTitle>Input</MDBCardTitle>
+        <MDBCardText>
+          <MDBInput label="Dataset URL" type="url" v-model="doc" />
+          <small class="text-danger" v-if="docError">{{ docError }}</small>
+          <MDBInput label="N3 Conversion Rules URL" type="url" v-model="rules" style="margin-top: 1rem" />
+          <small>Leave this URL empty to not apply any schema alignment tasks.</small>
+          <small class="text-danger" v-if="rulesError">{{ rulesError }}</small>
+          <MDBInput label="Schema URL" type="url" v-model="schema" style="margin-top: 1rem" />
+          <small class="text-danger" v-if="schemaError">{{ schemaError }}</small>
+          <MDBInput label="N3 Conversion Rules URL" type="url" v-model="invertedRules" style="margin-top: 1rem" />
+          <small>Rules to convert changes back to the original ontology.</small>
+          <small class="text-danger" v-if="invertedRulesError">{{ invertedRulesError }}</small>
+        </MDBCardText>
+
+        <MDBBtn color="primary" @click="execute" id="execute-btn">Load</MDBBtn>
+      </MDBCardBody>
+    </MDBCard>
   </MDBContainer>
 </template>
 
 <script>
 import { MDBBtn, MDBCard, MDBCardBody, MDBCardText, MDBCardTitle, MDBContainer, MDBInput } from "mdb-vue-ui-kit";
-import { getDefaultSession, handleIncomingRedirect, login, logout } from "@inrupt/solid-client-authn-browser";
+import { getDefaultSession, handleIncomingRedirect, login, logout, fetch } from "@inrupt/solid-client-authn-browser";
 
 export default {
   name: "FormViewer",
@@ -44,6 +64,14 @@ export default {
       oidcIssuer: "",
       authError: null,
       loggedIn: null,
+      doc: "",
+      rules: "",
+      invertedRules: "",
+      schema: "",
+      docError: "",
+      rulesError: "",
+      invertedRulesError: "",
+      schemaError: "",
     };
   },
   created() {
@@ -77,6 +105,48 @@ export default {
       await logout();
       this.loggedIn = undefined;
     },
+    async execute(event) {
+      event.preventDefault();
+
+      this.docError = this.isValidUrl(this.doc) ? "" : "Please enter a valid URL.";
+      this.rulesError = this.isValidUrl(this.rules) ? "" : "Please enter a valid URL.";
+      this.invertedRulesError = this.isValidUrl(this.invertedRules) ? "" : "Please enter a valid URL.";
+      this.schemaError = this.isValidUrl(this.schema) ? "" : "Please enter a valid URL.";
+
+      if (this.docError || this.rulesError || this.invertedRulesError || this.schemaError) {
+        return;
+      }
+
+      const n3doc = await this.loadContentOfUrl(this.doc);
+      const n3rules = await this.loadContentOfUrl(this.rules);
+      const n3invertedRules = await this.loadContentOfUrl(this.invertedRules);
+      const n3schema = await this.loadContentOfUrl(this.schema);
+
+      console.log("n3doc", n3doc);
+      console.log("n3rules", n3rules);
+      console.log("n3invertedRules", n3invertedRules);
+      console.log("n3schema", n3schema);
+    },
+    isValidUrl(url) {
+      try {
+        new URL(url);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+    async loadContentOfUrl(url) {
+      const response = await fetch(url, {
+        cors: "cors",
+      });
+      let content = await response.text();
+
+      // Add base to doc if not yet. Fixing relative IRIs.
+      if (!content.includes("@base") && !content.includes("BASE")) {
+        content = `@base <${url}> .\n${content}`;
+      }
+      return content;
+    },
   },
 };
 </script>
@@ -85,5 +155,8 @@ export default {
 h1 {
   margin-top: 3rem;
   margin-bottom: 3rem;
+}
+.card {
+  margin-bottom: 2rem;
 }
 </style>
