@@ -42,6 +42,25 @@
         <MDBBtn color="primary" @click="execute" id="execute-btn">Load</MDBBtn>
       </MDBCardBody>
     </MDBCard>
+
+    <MDBCard>
+      <MDBCardBody class="w-100">
+        <MDBCardTitle>Form</MDBCardTitle>
+        <MDBCardText>
+          <div v-if="fields.length">
+            <div v-for="(field, index) in fields" :key="index">
+              <div v-if="field.type === 'SingleLineTextField'" style="margin-bottom: 1rem">
+                <MDBInput :label="field.label" type="text" v-model="field.value" />
+                <small>{{ field.property }}</small>
+              </div>
+            </div>
+          </div>
+          <div v-else>
+            <p>No data to display.</p>
+          </div>
+        </MDBCardText>
+      </MDBCardBody>
+    </MDBCard>
   </MDBContainer>
 </template>
 
