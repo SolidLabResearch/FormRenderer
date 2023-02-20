@@ -68,6 +68,16 @@
                 <MDBInput :label="field.label" type="date" v-model="field.value" />
                 <small>{{ field.property }}</small>
               </div>
+
+              <div v-if="field.type === 'Choice'" style="margin-bottom: 1rem">
+                <label>{{ field.label }}</label>
+                <select class="form-select" v-model="field.value">
+                  <option v-for="option in field.options" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+                <small>{{ field.property }}</small>
+              </div>
             </div>
           </div>
           <div v-else>
@@ -80,7 +90,16 @@
 </template>
 
 <script>
-import { MDBBtn, MDBCard, MDBCardBody, MDBCardText, MDBCardTitle, MDBContainer, MDBInput, MDBCheckbox } from "mdb-vue-ui-kit";
+import {
+  MDBBtn,
+  MDBCard,
+  MDBCardBody,
+  MDBCardText,
+  MDBCardTitle,
+  MDBContainer,
+  MDBInput,
+  MDBCheckbox,
+} from "mdb-vue-ui-kit";
 import { fetch, getDefaultSession, handleIncomingRedirect, login, logout } from "@inrupt/solid-client-authn-browser";
 import { QueryEngine } from "@comunica/query-sparql-solid";
 
@@ -238,18 +257,17 @@ export default {
       const query = `
       PREFIX ui: <http://www.w3.org/ns/ui#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-      SELECT ?type ?property ?label WHERE {
+      SELECT ?type ?property ?label ?from WHERE {
         <${this.schema}> ui:parts ?list .
         ?list rdf:rest*/rdf:first ?field .
         ?field a ?type;
           ui:property ?property.
-        OPTIONAL {
-          ?field ui:label ?label.
-        }
+        OPTIONAL { ?field ui:label ?label. }
+        OPTIONAL { ?field ui:from ?from. }
       }
       `;
 
-      const fields = await (
+      const bindings = await (
         await this.engine.queryBindings(query, {
           sources: [
             {
@@ -262,13 +280,52 @@ export default {
         })
       ).toArray();
 
-      return fields.map((row) => {
+      const fields = bindings.map((row) => {
         return {
           type: row.get("type").value.split("#")[1],
           property: row.get("property").value,
           label: row.get("label")?.value,
+          from: row.get("from")?.value,
         };
       });
+
+      // Add options to Choice fields
+      for (const field of fields) {
+        if (field.type === "Choice") {
+          field.options = [];
+          const query = `
+          PREFIX ui: <http://www.w3.org/ns/ui#>
+          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+          SELECT ?value ?label WHERE {
+            ?value a skos:Concept, <${field.from}> ;
+              skos:prefLabel ?label.
+          }
+          `;
+
+          const bindings = await (
+            await this.engine.queryBindings(query, {
+              sources: [
+                {
+                  type: "stringSource",
+                  value: n3schema,
+                  mediaType: "text/n3",
+                  baseIRI: this.schema.split("#")[0],
+                },
+              ],
+            })
+          ).toArray();
+
+          field.options = bindings.map((row) => {
+            return {
+              value: row.get("value").value,
+              label: row.get("label").value,
+            };
+          });
+        }
+      }
+
+      return fields;
     },
   },
   watch: {
