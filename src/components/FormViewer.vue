@@ -53,6 +53,11 @@
                 <MDBInput :label="field.label" type="text" v-model="field.value" />
                 <small>{{ field.property }}</small>
               </div>
+
+              <div v-if="field.type === 'MultiLineTextField'" style="margin-bottom: 1rem">
+                <MDBInput :label="field.label" type="textarea" v-model="field.value" />
+                <small>{{ field.property }}</small>
+              </div>
             </div>
           </div>
           <div v-else>
