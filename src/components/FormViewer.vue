@@ -58,6 +58,16 @@
                 <MDBInput :label="field.label" type="textarea" v-model="field.value" />
                 <small>{{ field.property }}</small>
               </div>
+
+              <div v-if="field.type === 'BooleanField'" style="margin-bottom: 1rem">
+                <MDBCheckbox :label="field.label" v-model="field.value" />
+                <small>{{ field.property }}</small>
+              </div>
+
+              <div v-if="field.type === 'DateField'" style="margin-bottom: 1rem">
+                <MDBInput :label="field.label" type="date" v-model="field.value" />
+                <small>{{ field.property }}</small>
+              </div>
             </div>
           </div>
           <div v-else>
@@ -70,7 +80,7 @@
 </template>
 
 <script>
-import { MDBBtn, MDBCard, MDBCardBody, MDBCardText, MDBCardTitle, MDBContainer, MDBInput } from "mdb-vue-ui-kit";
+import { MDBBtn, MDBCard, MDBCardBody, MDBCardText, MDBCardTitle, MDBContainer, MDBInput, MDBCheckbox } from "mdb-vue-ui-kit";
 import { fetch, getDefaultSession, handleIncomingRedirect, login, logout } from "@inrupt/solid-client-authn-browser";
 import { QueryEngine } from "@comunica/query-sparql-solid";
 
@@ -84,6 +94,7 @@ export default {
     MDBCardText,
     MDBInput,
     MDBBtn,
+    MDBCheckbox,
   },
   data() {
     return {
