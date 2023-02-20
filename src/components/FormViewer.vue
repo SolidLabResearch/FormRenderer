@@ -31,8 +31,9 @@
           <MDBInput label="N3 Conversion Rules URL" type="url" v-model="rules" style="margin-top: 1rem" />
           <small>Leave this URL empty to not apply any schema alignment tasks.</small>
           <small class="text-danger" v-if="rulesError"><br>{{ rulesError }}</small>
-          <MDBInput label="Schema URL" type="url" v-model="schema" style="margin-top: 1rem" />
-          <small class="text-danger" v-if="schemaError">{{ schemaError }}</small>
+          <MDBInput label="Schema URI" type="url" v-model="schema" style="margin-top: 1rem" />
+          <small>URI to the specific form in the schema document.</small>
+          <small class="text-danger" v-if="schemaError"><br>{{ schemaError }}</small>
           <MDBInput label="N3 Conversion Rules URL" type="url" v-model="invertedRules" style="margin-top: 1rem" />
           <small>Rules to convert changes back to the original ontology.</small>
           <small class="text-danger" v-if="invertedRulesError"><br>{{ invertedRulesError }}</small>
@@ -46,7 +47,8 @@
 
 <script>
 import { MDBBtn, MDBCard, MDBCardBody, MDBCardText, MDBCardTitle, MDBContainer, MDBInput } from "mdb-vue-ui-kit";
-import { getDefaultSession, handleIncomingRedirect, login, logout, fetch } from "@inrupt/solid-client-authn-browser";
+import { fetch, getDefaultSession, handleIncomingRedirect, login, logout } from "@inrupt/solid-client-authn-browser";
+import { QueryEngine } from "@comunica/query-sparql-solid";
 
 export default {
   name: "FormViewer",
@@ -72,6 +74,8 @@ export default {
       rulesError: "",
       invertedRulesError: "",
       schemaError: "",
+      engine: new QueryEngine(),
+      fields: [],
     };
   },
   created() {
@@ -153,7 +157,11 @@ export default {
       this.docError = this.isValidUrl(this.doc) ? "" : "Please enter a valid URL.";
       this.rulesError = this.isValidUrl(this.rules) ? "" : "Please enter a valid URL.";
       this.invertedRulesError = this.isValidUrl(this.invertedRules) ? "" : "Please enter a valid URL.";
-      this.schemaError = this.isValidUrl(this.schema) ? "" : "Please enter a valid URL.";
+      this.schemaError = this.isValidUrl(this.schema)
+        ? this.schema.includes("#")
+          ? ""
+          : "Make sure to enter a URI to a specific form schema instead of a document URL."
+        : "Please enter a valid URI.";
 
       if (this.docError || this.rulesError || this.invertedRulesError || this.schemaError) {
         return;
@@ -168,6 +176,8 @@ export default {
       console.log("n3rules", n3rules);
       console.log("n3invertedRules", n3invertedRules);
       console.log("n3schema", n3schema);
+
+      this.fields = await this.parseSchema(n3schema);
     },
     isValidUrl(url) {
       try {
@@ -185,9 +195,45 @@ export default {
 
       // Add base to doc if not yet. Fixing relative IRIs.
       if (!content.includes("@base") && !content.includes("BASE")) {
-        content = `@base <${url}> .\n${content}`;
+        content = `@base <${url.split("#")[0]}> .\n${content}`;
       }
       return content;
+    },
+    async parseSchema(n3schema) {
+      const query = `
+      PREFIX ui: <http://www.w3.org/ns/ui#>
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      SELECT ?type ?property ?label WHERE {
+        <${this.schema}> ui:parts ?list .
+        ?list rdf:rest*/rdf:first ?field .
+        ?field a ?type;
+          ui:property ?property.
+        OPTIONAL {
+          ?field ui:label ?label.
+        }
+      }
+      `;
+
+      const fields = await (
+        await this.engine.queryBindings(query, {
+          sources: [
+            {
+              type: "stringSource",
+              value: n3schema,
+              mediaType: "text/n3",
+              baseIRI: this.schema.split("#")[0],
+            },
+          ],
+        })
+      ).toArray();
+
+      return fields.map((row) => {
+        return {
+          type: row.get("type").value.split("#")[1],
+          property: row.get("property").value,
+          label: row.get("label")?.value,
+        };
+      });
     },
   },
   watch: {
