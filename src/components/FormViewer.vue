@@ -47,31 +47,34 @@
       <MDBCardBody class="w-100">
         <MDBCardTitle>Form</MDBCardTitle>
         <MDBCardText>
+          <div v-for="(error, index) in errors" :key="index" class="alert alert-danger" role="alert">
+            {{ error }}
+          </div>
           <div v-if="fields.length">
             <div v-for="(field, index) in fields" :key="index">
               <div v-if="field.type === 'SingleLineTextField'" style="margin-bottom: 1rem">
-                <MDBInput :label="field.label" type="text" v-model="field.value" />
+                <MDBInput :label="field.label" type="text" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'MultiLineTextField'" style="margin-bottom: 1rem">
-                <MDBInput :label="field.label" type="textarea" v-model="field.value" />
+                <MDBInput :label="field.label" type="textarea" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'BooleanField'" style="margin-bottom: 1rem">
-                <MDBCheckbox :label="field.label" v-model="field.value" />
+                <MDBCheckbox :label="field.label" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'DateField'" style="margin-bottom: 1rem">
-                <MDBInput :label="field.label" type="date" v-model="field.value" />
+                <MDBInput :label="field.label" type="date" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'Choice'" style="margin-bottom: 1rem">
                 <label>{{ field.label }}</label>
-                <select class="form-select" v-model="field.value">
+                <select class="form-select" v-model="field.value.value">
                   <option v-for="option in field.options" :key="option.value" :value="option.value">
                     {{ option.label }}
                   </option>
@@ -130,6 +133,7 @@ export default {
       schemaError: "",
       engine: new QueryEngine(),
       fields: [],
+      errors: [],
     };
   },
   created() {
@@ -207,6 +211,7 @@ export default {
     },
     async execute(event) {
       event.preventDefault();
+      this.errors = [];
 
       this.docError = this.isValidUrl(this.doc) ? "" : "Please enter a valid URL.";
       this.rulesError = this.isValidUrl(this.rules) ? "" : "Please enter a valid URL.";
@@ -232,6 +237,21 @@ export default {
       console.log("n3schema", n3schema);
 
       this.fields = await this.parseSchema(n3schema);
+
+      for (const field of this.fields) {
+        const data = await this.queryDataForField(n3doc, field);
+        console.log("value", data);
+        if (!field.multiple && data.length > 1) {
+          this.errors.push(`Multiple values found for ${field.label} while only one is expected.`);
+        }
+        // todo: handle multiple values
+        if (data.length > 1) {
+          this.errors.push(
+            `Currently only one value per field supported, but multiple values found for ${field.label}.`
+          );
+        }
+        field.value = data[0] || { value: "" };
+      }
     },
     isValidUrl(url) {
       try {
@@ -257,13 +277,16 @@ export default {
       const query = `
       PREFIX ui: <http://www.w3.org/ns/ui#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-      SELECT ?type ?property ?label ?from WHERE {
+      SELECT ?type ?property ?label ?from ?required ?multiple ?sequence WHERE {
         <${this.schema}> ui:parts ?list .
         ?list rdf:rest*/rdf:first ?field .
         ?field a ?type;
           ui:property ?property.
         OPTIONAL { ?field ui:label ?label. }
         OPTIONAL { ?field ui:from ?from. }
+        OPTIONAL { ?field ui:required ?required. }
+        OPTIONAL { ?field ui:multiple ?multiple. }
+        OPTIONAL { ?field ui:sequence ?sequence. }
       }
       `;
 
@@ -286,8 +309,14 @@ export default {
           property: row.get("property").value,
           label: row.get("label")?.value,
           from: row.get("from")?.value,
+          required: row.get("required")?.value === "true",
+          multiple: row.get("multiple")?.value === "true",
+          sequence: parseInt(row.get("sequence")?.value),
         };
       });
+
+      // Sort fields by sequence
+      fields.sort((a, b) => a.sequence - b.sequence);
 
       // Add options to Choice fields
       for (const field of fields) {
@@ -326,6 +355,33 @@ export default {
       }
 
       return fields;
+    },
+    async queryDataForField(data, field) {
+      const query = `
+      SELECT ?s ?value WHERE {
+        ?s <${field.property}> ?value.
+      }
+      `;
+
+      const bindings = await (
+        await this.engine.queryBindings(query, {
+          sources: [
+            {
+              type: "stringSource",
+              value: data,
+              mediaType: "text/n3",
+              baseIRI: this.doc.split("#")[0],
+            },
+          ],
+        })
+      ).toArray();
+
+      return bindings.map((row) => {
+        return {
+          subject: row.get("s").value,
+          value: row.get("value").value,
+        };
+      });
     },
   },
   watch: {
