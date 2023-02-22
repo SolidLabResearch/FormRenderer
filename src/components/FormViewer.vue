@@ -327,7 +327,7 @@ export default {
           PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
           SELECT ?value ?label WHERE {
-            ?value a skos:Concept, <${field.from}> ;
+            ?value a <${field.from}> ;
               skos:prefLabel ?label.
           }
           `;
