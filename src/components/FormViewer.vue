@@ -53,21 +53,25 @@
           <div v-if="fields.length">
             <div v-for="(field, index) in fields" :key="index">
               <div v-if="field.type === 'SingleLineTextField'" style="margin-bottom: 1rem">
+                <label>{{ field.label }}</label>
                 <MDBInput :label="field.label" type="text" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'MultiLineTextField'" style="margin-bottom: 1rem">
+                <label>{{ field.label }}</label>
                 <MDBInput :label="field.label" type="textarea" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'BooleanField'" style="margin-bottom: 1rem">
+                <label>{{ field.label }}</label>
                 <MDBCheckbox :label="field.label" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'DateField'" style="margin-bottom: 1rem">
+                <label>{{ field.label }}</label>
                 <MDBInput :label="field.label" type="date" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
