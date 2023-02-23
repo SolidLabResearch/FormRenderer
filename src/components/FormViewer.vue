@@ -53,31 +53,31 @@
           <div v-if="fields.length">
             <div v-for="(field, index) in fields" :key="index">
               <div v-if="field.type === 'SingleLineTextField'" style="margin-bottom: 1rem">
-                <label>{{ field.label }}</label>
+                <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
                 <MDBInput :label="field.label" type="text" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'MultiLineTextField'" style="margin-bottom: 1rem">
-                <label>{{ field.label }}</label>
+                <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
                 <MDBInput :label="field.label" type="textarea" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'BooleanField'" style="margin-bottom: 1rem">
-                <label>{{ field.label }}</label>
+                <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
                 <MDBCheckbox :label="field.label" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'DateField'" style="margin-bottom: 1rem">
-                <label>{{ field.label }}</label>
+                <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
                 <MDBInput :label="field.label" type="date" v-model="field.value.value" />
                 <small>{{ field.property }}</small>
               </div>
 
               <div v-if="field.type === 'Choice'" style="margin-bottom: 1rem">
-                <label>{{ field.label }}</label>
+                <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
                 <select class="form-select" v-model="field.value.value">
                   <option v-for="option in field.options" :key="option.value" :value="option.value">
                     {{ option.label }}
