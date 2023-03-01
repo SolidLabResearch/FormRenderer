@@ -1,6 +1,5 @@
 <template>
   <MDBBtn
-    v-if="field.multiple"
     outline="danger"
     :id="'button-' + index + '-' + f_index"
     style="margin-top: 0.5rem"

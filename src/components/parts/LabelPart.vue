@@ -2,7 +2,7 @@
   <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
   <MDBBtn
     floating
-    v-if="field.multiple"
+    :disabled="field.values?.length === 1 && !field.multiple"
     class="d-flex ms-auto"
     color="primary"
     size="sm"
