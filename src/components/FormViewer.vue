@@ -53,193 +53,23 @@
           <div v-if="fields.length">
             <div v-for="(field, index) in fields" :key="index">
               <div v-if="field.type === 'SingleLineTextField'" style="margin-bottom: 3rem">
-                <div class="d-flex">
-                  <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
-                  <MDBBtn
-                    floating
-                    v-if="field.multiple"
-                    class="d-flex ms-auto"
-                    color="primary"
-                    size="sm"
-                    style="margin-right: 1em"
-                    @click="addValue(field)"
-                  >
-                    <MDBIcon icon="plus" />
-                  </MDBBtn>
-                </div>
-                <MDBInput
-                  floating
-                  inputGroup
-                  :formOutline="false"
-                  v-for="(value, f_index) in field.values"
-                  :key="f_index"
-                  type="text"
-                  v-model="value.value"
-                  style="margin-top: 0.5rem"
-                  :aria-describedby="'button-' + index + '-' + f_index"
-                >
-                  <MDBBtn
-                    v-if="field.multiple"
-                    outline="danger"
-                    :id="'button-' + index + '-' + f_index"
-                    style="margin-top: 0.5rem"
-                    @click="removeValue(field, f_index)"
-                    size="sm"
-                    :disabled="field.values.length === 1 && field.required"
-                  >
-                    <MDBIcon icon="trash-alt" />
-                  </MDBBtn>
-                </MDBInput>
-                <small>{{ field.property }}</small>
+                <SingleLineTextField :field="field" :index="index" />
               </div>
 
               <div v-if="field.type === 'MultiLineTextField'" style="margin-bottom: 3rem">
-                <div class="d-flex">
-                  <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
-                  <MDBBtn
-                    floating
-                    v-if="field.multiple"
-                    class="d-flex ms-auto"
-                    color="primary"
-                    size="sm"
-                    style="margin-right: 1em"
-                    @click="addValue(field)"
-                  >
-                    <MDBIcon icon="plus" />
-                  </MDBBtn>
-                </div>
-                <MDBInput
-                  floating
-                  inputGroup
-                  :formOutline="false"
-                  v-for="(value, f_index) in field.values"
-                  :key="f_index"
-                  type="textarea"
-                  v-model="value.value"
-                  style="margin-top: 0.5rem"
-                  :aria-describedby="'button-' + index + '-' + f_index"
-                >
-                  <MDBBtn
-                    v-if="field.multiple"
-                    outline="danger"
-                    :id="'button-' + index + '-' + f_index"
-                    style="margin-top: 0.5rem"
-                    @click="removeValue(field, f_index)"
-                    size="sm"
-                    :disabled="field.values.length === 1 && field.required"
-                  >
-                    <MDBIcon icon="trash-alt" />
-                  </MDBBtn>
-                </MDBInput>
-                <small>{{ field.property }}</small>
+                <MultiLineTextField :field="field" :index="index" />
               </div>
 
               <div v-if="field.type === 'BooleanField'" style="margin-bottom: 3rem">
-                <div class="d-flex">
-                  <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
-                  <MDBBtn
-                    floating
-                    v-if="field.multiple"
-                    class="d-flex ms-auto"
-                    color="primary"
-                    size="sm"
-                    style="margin-right: 1em"
-                    @click="addValue(field)"
-                  >
-                    <MDBIcon icon="plus" />
-                  </MDBBtn>
-                </div>
-                <div class="d-flex" v-for="(value, f_index) in field.values" :key="f_index" style="margin-top: 0.5rem">
-                  <MDBCheckbox :label="field.label" v-model="value.value" />
-                  <MDBBtn
-                    v-if="field.multiple"
-                    class="d-flex ms-auto"
-                    outline="danger"
-                    @click="removeValue(field, f_index)"
-                    size="sm"
-                    :disabled="field.values.length === 1 && field.required"
-                  >
-                    <MDBIcon icon="trash-alt" />
-                  </MDBBtn>
-                </div>
-                <small>{{ field.property }}</small>
+                <BooleanField :field="field" :index="index" />
               </div>
 
               <div v-if="field.type === 'DateField'" style="margin-bottom: 3rem">
-                <div class="d-flex">
-                  <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
-                  <MDBBtn
-                    floating
-                    v-if="field.multiple"
-                    class="d-flex ms-auto"
-                    color="primary"
-                    size="sm"
-                    style="margin-right: 1em"
-                    @click="addValue(field)"
-                  >
-                    <MDBIcon icon="plus" />
-                  </MDBBtn>
-                </div>
-                <MDBInput
-                  floating
-                  inputGroup
-                  :formOutline="false"
-                  v-for="(value, f_index) in field.values"
-                  :key="f_index"
-                  type="date"
-                  v-model="value.value"
-                  style="margin-top: 0.5rem"
-                  :aria-describedby="'button-' + index + '-' + f_index"
-                >
-                  <MDBBtn
-                    v-if="field.multiple"
-                    outline="danger"
-                    :id="'button-' + index + '-' + f_index"
-                    style="margin-top: 0.5rem"
-                    @click="removeValue(field, f_index)"
-                    size="sm"
-                    :disabled="field.values.length === 1 && field.required"
-                  >
-                    <MDBIcon icon="trash-alt" />
-                  </MDBBtn>
-                </MDBInput>
-                <small>{{ field.property }}</small>
+                <DateField :field="field" :index="index" />
               </div>
 
               <div v-if="field.type === 'Choice'" style="margin-bottom: 3rem">
-                <div class="d-flex">
-                  <label>{{ field.label }} <span v-if="field.required" class="text-danger">*</span></label>
-                  <MDBBtn
-                    floating
-                    v-if="field.multiple"
-                    class="d-flex ms-auto"
-                    color="primary"
-                    size="sm"
-                    style="margin-right: 1em"
-                    @click="addValue(field)"
-                  >
-                    <MDBIcon icon="plus" />
-                  </MDBBtn>
-                </div>
-                <div class="input-group" v-for="(value, f_index) in field.values" :key="f_index">
-                  <select class="form-select" v-model="value.value" style="margin-top: 0.5rem">
-                    <option v-for="option in field.options" :key="option.value" :value="option.value">
-                      {{ option.label }}
-                    </option>
-                  </select>
-                  <MDBBtn
-                    v-if="field.multiple"
-                    outline="danger"
-                    :id="'button-' + index + '-' + f_index"
-                    style="margin-top: 0.5rem"
-                    @click="removeValue(field, f_index)"
-                    size="sm"
-                    :disabled="field.values.length === 1 && field.required"
-                  >
-                    <MDBIcon icon="trash-alt" />
-                  </MDBBtn>
-                </div>
-                <small>{{ field.property }}</small>
+                <ChoiceField :field="field" :index="index" />
               </div>
             </div>
           </div>
@@ -253,24 +83,24 @@
 </template>
 
 <script>
-import {
-  MDBBtn,
-  MDBCard,
-  MDBCardBody,
-  MDBCardText,
-  MDBCardTitle,
-  MDBContainer,
-  MDBInput,
-  MDBCheckbox,
-  MDBIcon,
-} from "mdb-vue-ui-kit";
+import { MDBBtn, MDBCard, MDBCardBody, MDBCardText, MDBCardTitle, MDBContainer, MDBInput } from "mdb-vue-ui-kit";
 import { fetch, getDefaultSession, handleIncomingRedirect, login, logout } from "@inrupt/solid-client-authn-browser";
 import { QueryEngine } from "@comunica/query-sparql-solid";
 import { v4 as uuid } from "uuid";
+import SingleLineTextField from "@/components/fields/SingleLineTextField.vue";
+import MultiLineTextField from "@/components/fields/MultiLineTextField.vue";
+import BooleanField from "@/components/fields/BooleanField.vue";
+import DateField from "@/components/fields/DateField.vue";
+import ChoiceField from "@/components/fields/ChoiceField.vue";
 
 export default {
   name: "FormViewer",
   components: {
+    SingleLineTextField,
+    MultiLineTextField,
+    BooleanField,
+    DateField,
+    ChoiceField,
     MDBContainer,
     MDBCard,
     MDBCardBody,
@@ -278,8 +108,6 @@ export default {
     MDBCardText,
     MDBInput,
     MDBBtn,
-    MDBCheckbox,
-    MDBIcon,
   },
   data() {
     return {
@@ -543,12 +371,6 @@ export default {
           value: row.get("value").value,
         };
       });
-    },
-    addValue(field) {
-      field.values.push({ value: undefined, subject: `${this.doc}#${uuid()}` });
-    },
-    removeValue(field, index) {
-      field.values.splice(index, 1);
     },
   },
   watch: {
