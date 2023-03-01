@@ -8,7 +8,7 @@
     size="sm"
     :disabled="field.values.length === 1 && field.required"
   >
-    <MDBIcon icon="trash-alt" />
+    <MDBIcon icon="trash-alt" style="align-self: center" />
   </MDBBtn>
 </template>
 
