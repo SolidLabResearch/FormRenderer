@@ -31,9 +31,9 @@
           <MDBInput label="N3 Conversion Rules URL" type="url" v-model="rules" style="margin-top: 1rem" />
           <small>Leave this URL empty to not apply any schema alignment tasks.</small>
           <small class="text-danger" v-if="rulesError"><br>{{ rulesError }}</small>
-          <MDBInput label="Schema URI" type="url" v-model="schema" style="margin-top: 1rem" />
-          <small>URI to the specific form in the schema document.</small>
-          <small class="text-danger" v-if="schemaError"><br>{{ schemaError }}</small>
+          <MDBInput label="Form description URI" type="url" v-model="form" style="margin-top: 1rem" />
+          <small>URI to the specific form in the form description document.</small>
+          <small class="text-danger" v-if="formError"><br>{{ formError }}</small>
           <MDBInput label="N3 Conversion Rules URL" type="url" v-model="invertedRules" style="margin-top: 1rem" />
           <small>Rules to convert changes back to the original ontology.</small>
           <small class="text-danger" v-if="invertedRulesError"><br>{{ invertedRulesError }}</small>
@@ -117,11 +117,11 @@ export default {
       doc: "",
       rules: "",
       invertedRules: "",
-      schema: "",
+      form: "",
       docError: "",
       rulesError: "",
       invertedRulesError: "",
-      schemaError: "",
+      formError: "",
       engine: new QueryEngine(),
       fields: [],
       errors: [],
@@ -144,8 +144,8 @@ export default {
         if (parsedQuery.rules) {
           this.rules = parsedQuery.rules;
         }
-        if (parsedQuery.schema) {
-          this.schema = parsedQuery.schema;
+        if (parsedQuery.form) {
+          this.form = parsedQuery.form;
         }
         if (parsedQuery.invertedRules) {
           this.invertedRules = parsedQuery.invertedRules;
@@ -195,7 +195,7 @@ export default {
         query: {
           doc: this.doc,
           rules: this.rules,
-          schema: this.schema,
+          form: this.form,
           invertedRules: this.invertedRules,
         },
       });
@@ -207,27 +207,27 @@ export default {
       this.docError = this.isValidUrl(this.doc) ? "" : "Please enter a valid URL.";
       this.rulesError = this.isValidUrl(this.rules) ? "" : "Please enter a valid URL.";
       this.invertedRulesError = this.isValidUrl(this.invertedRules) ? "" : "Please enter a valid URL.";
-      this.schemaError = this.isValidUrl(this.schema)
-        ? this.schema.includes("#")
+      this.formError = this.isValidUrl(this.form)
+        ? this.form.includes("#")
           ? ""
-          : "Make sure to enter a URI to a specific form schema instead of a document URL."
+          : "Make sure to enter a URI to a specific form description instead of a document URL."
         : "Please enter a valid URI.";
 
-      if (this.docError || this.rulesError || this.invertedRulesError || this.schemaError) {
+      if (this.docError || this.rulesError || this.invertedRulesError || this.formError) {
         return;
       }
 
       const n3doc = await this.loadContentOfUrl(this.doc);
       const n3rules = await this.loadContentOfUrl(this.rules);
       const n3invertedRules = await this.loadContentOfUrl(this.invertedRules);
-      const n3schema = await this.loadContentOfUrl(this.schema);
+      const n3form = await this.loadContentOfUrl(this.form);
 
       console.log("n3doc", n3doc);
       console.log("n3rules", n3rules);
       console.log("n3invertedRules", n3invertedRules);
-      console.log("n3schema", n3schema);
+      console.log("n3form", n3form);
 
-      this.fields = await this.parseSchema(n3schema);
+      this.fields = await this.parseForm(n3form);
 
       for (const field of this.fields) {
         const data = await this.queryDataForField(n3doc, field);
@@ -262,12 +262,12 @@ export default {
       }
       return content;
     },
-    async parseSchema(n3schema) {
+    async parseForm(n3form) {
       const query = `
       PREFIX ui: <http://www.w3.org/ns/ui#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       SELECT ?type ?property ?label ?from ?required ?multiple ?sequence WHERE {
-        <${this.schema}> ui:parts ?list .
+        <${this.form}> ui:parts ?list .
         ?list rdf:rest*/rdf:first ?field .
         ?field a ?type;
           ui:property ?property.
@@ -284,9 +284,9 @@ export default {
           sources: [
             {
               type: "stringSource",
-              value: n3schema,
+              value: n3form,
               mediaType: "text/n3",
-              baseIRI: this.schema.split("#")[0],
+              baseIRI: this.form.split("#")[0],
             },
           ],
         })
@@ -326,9 +326,9 @@ export default {
               sources: [
                 {
                   type: "stringSource",
-                  value: n3schema,
+                  value: n3form,
                   mediaType: "text/n3",
-                  baseIRI: this.schema.split("#")[0],
+                  baseIRI: this.form.split("#")[0],
                 },
               ],
             })
@@ -380,7 +380,7 @@ export default {
     rules: function () {
       this.updateQueryParams();
     },
-    schema: function () {
+    form: function () {
       this.updateQueryParams();
     },
     invertedRules: function () {
