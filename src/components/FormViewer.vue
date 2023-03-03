@@ -34,9 +34,6 @@
           <MDBInput label="Form description URI" type="url" v-model="form" style="margin-top: 1rem" />
           <small>URI to the specific form in the form description document.</small>
           <small class="text-danger" v-if="formError"><br>{{ formError }}</small>
-          <MDBInput label="N3 Conversion Rules URL" type="url" v-model="invertedRules" style="margin-top: 1rem" />
-          <small>Rules to convert changes back to the original ontology.</small>
-          <small class="text-danger" v-if="invertedRulesError"><br>{{ invertedRulesError }}</small>
         </MDBCardText>
 
         <MDBBtn color="primary" @click="execute" id="execute-btn">Load</MDBBtn>
@@ -92,6 +89,7 @@ import MultiLineTextField from "@/components/fields/MultiLineTextField.vue";
 import BooleanField from "@/components/fields/BooleanField.vue";
 import DateField from "@/components/fields/DateField.vue";
 import ChoiceField from "@/components/fields/ChoiceField.vue";
+import { n3reasoner } from "eyereasoner";
 
 export default {
   name: "FormViewer",
@@ -116,11 +114,9 @@ export default {
       loggedIn: null,
       doc: "",
       rules: "",
-      invertedRules: "",
       form: "",
       docError: "",
       rulesError: "",
-      invertedRulesError: "",
       formError: "",
       engine: new QueryEngine(),
       fields: [],
@@ -146,9 +142,6 @@ export default {
         }
         if (parsedQuery.form) {
           this.form = parsedQuery.form;
-        }
-        if (parsedQuery.invertedRules) {
-          this.invertedRules = parsedQuery.invertedRules;
         }
       }
     });
@@ -196,7 +189,6 @@ export default {
           doc: this.doc,
           rules: this.rules,
           form: this.form,
-          invertedRules: this.invertedRules,
         },
       });
     },
@@ -205,27 +197,36 @@ export default {
       this.errors = [];
 
       this.docError = this.isValidUrl(this.doc) ? "" : "Please enter a valid URL.";
-      this.rulesError = this.isValidUrl(this.rules) ? "" : "Please enter a valid URL.";
-      this.invertedRulesError = this.isValidUrl(this.invertedRules) ? "" : "Please enter a valid URL.";
+      this.rulesError = !this.rules || this.isValidUrl(this.rules) ? "" : "Please enter a valid URL.";
       this.formError = this.isValidUrl(this.form)
         ? this.form.includes("#")
           ? ""
           : "Make sure to enter a URI to a specific form description instead of a document URL."
         : "Please enter a valid URI.";
 
-      if (this.docError || this.rulesError || this.invertedRulesError || this.formError) {
+      if (this.docError || this.rulesError || this.formError) {
         return;
       }
 
       const n3doc = await this.loadContentOfUrl(this.doc);
-      const n3rules = await this.loadContentOfUrl(this.rules);
-      const n3invertedRules = await this.loadContentOfUrl(this.invertedRules);
-      const n3form = await this.loadContentOfUrl(this.form);
+      let n3form = await this.loadContentOfUrl(this.form);
 
       console.log("n3doc", n3doc);
-      console.log("n3rules", n3rules);
-      console.log("n3invertedRules", n3invertedRules);
       console.log("n3form", n3form);
+
+      if (this.rules) {
+        // Apply schema alignment rules
+        const n3rules = await this.loadContentOfUrl(this.rules);
+
+        // Add base to doc if not yet. Fixing relative IRIs.
+        if (!n3form.includes("@base") && !n3form.includes("BASE")) {
+          n3form = `@base <${this.doc}> .\n${n3form}`;
+        }
+
+        const options = { blogic: false, outputType: "string" };
+        n3form = await n3reasoner(n3form, n3rules, options);
+        console.log("n3form after rules", n3form);
+      }
 
       this.fields = await this.parseForm(n3form);
 
@@ -381,9 +382,6 @@ export default {
       this.updateQueryParams();
     },
     form: function () {
-      this.updateQueryParams();
-    },
-    invertedRules: function () {
       this.updateQueryParams();
     },
   },

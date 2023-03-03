@@ -13,6 +13,7 @@
   "dependencies": {
     "@comunica/query-sparql-solid": "^2.4.0",
     "@inrupt/solid-client-authn-browser": "^1.12.3",
+    "eyereasoner": "^4.4.3",
     "mdb-vue-ui-kit": "^3.2.0",
     "uuid": "^9.0.0",
     "vue": "^3.2.45",
