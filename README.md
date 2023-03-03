@@ -1,6 +1,13 @@
 # FormViewer
 
-This template should help get you started developing with Vue 3 in Vite.
+A form viewer app with Solid - Google Forms but the Solid way.
+
+This app allows one to render a form definition together with data to be inserted into the form in a declarative way.
+This application natively supports the Solid-UI vocabulary for its input form definition but by passing along a set of
+N3 rules containing the mapping from any vocabulary to Solid-UI, it is possible to render any form definition that can
+be represented in RDF.
+
+To generate such form definition, one can use the [smessie/FormGenerator](https://github.com/smessie/FormGenerator) app.
 
 ## Recommended IDE Setup
 
@@ -44,3 +51,11 @@ npm run build
 ```sh
 npm run lint
 ```
+
+## Example Form
+
+### SHACL
+
+A very simple form definition in SHACL is passed along together with the rules that are enough to map this definition to Solid-UI.
+
+https://formviewer.smessie.com/?doc=https://solid.smessie.com/private/tests/forms/form-content.ttl&rules=https://solid.smessie.com/private/tests/forms/form-rules.n3&form=https://solid.smessie.com/private/tests/forms/form-content-shacl.ttl%237a48ecdc-80f5-4c1d-86c0-13a93c22c2f2
