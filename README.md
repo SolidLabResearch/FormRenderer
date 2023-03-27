@@ -1,6 +1,6 @@
-# FormViewer
+# FormRenderer
 
-A form viewer app with Solid - Google Forms but the Solid way.
+A form renderer app with Solid - Google Forms but the Solid way.
 
 This app allows one to render a form definition together with data to be inserted into the form in a declarative way.
 This application natively supports the Solid-UI vocabulary for its input form definition but by passing along a set of
@@ -13,7 +13,7 @@ To generate such form definition, one can use the [smessie/FormGenerator](https:
 
 The Dataset file could contain any predefined content that should be inserted in the form loaded from the form description file. 
 
-This FormViewer application uses the [Solid-UI](http://www.w3.org/ns/ui#) ontology to describe and understand how forms should look like.
+This FormRenderer application uses the [Solid-UI](http://www.w3.org/ns/ui#) ontology to describe and understand how forms should look like.
 However, any ontology can be used to define the form description that is passed along to the application. Here is where the Notation3 conversion rules file comes into play.
 This file should contain all rules needed to map the vocabulary used for the given form description towards a description using the Solid-UI vocabulary.
 We call this the schema alignment tasks and in fact translates the form description in the data vocabulary to the form description in the app vocabulary (i.e. Solid-UI).
@@ -125,4 +125,4 @@ npm run lint
 
 A very simple form definition in SHACL is passed along together with the rules that are enough to map this definition to Solid-UI.
 
-https://formviewer.smessie.com/?doc=https://solid.smessie.com/private/tests/forms/form-content.ttl&rules=https://solid.smessie.com/private/tests/forms/form-rules.n3&form=https://solid.smessie.com/private/tests/forms/form-content-shacl.ttl%237a48ecdc-80f5-4c1d-86c0-13a93c22c2f2
+https://formrenderer.smessie.com/?doc=https://solid.smessie.com/private/tests/forms/form-content.ttl&rules=https://solid.smessie.com/private/tests/forms/form-rules.n3&form=https://solid.smessie.com/private/tests/forms/form-content-shacl.ttl%237a48ecdc-80f5-4c1d-86c0-13a93c22c2f2

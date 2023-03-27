@@ -1,6 +1,6 @@
 <template>
   <MDBContainer>
-    <h1>FormViewer</h1>
+    <h1>FormRenderer</h1>
 
     <MDBCard>
       <MDBCardBody class="w-100">
@@ -97,7 +97,7 @@ import ChoiceField from "@/components/fields/ChoiceField.vue";
 import { n3reasoner } from "eyereasoner";
 
 export default {
-  name: "FormViewer",
+  name: "FormRenderer",
   components: {
     SingleLineTextField,
     MultiLineTextField,
@@ -180,7 +180,7 @@ export default {
           // e.g., the current page for a single-page app.
           redirectUrl: window.location.href,
           // Provide a name for the application when sending to the Solid Identity Provider
-          clientName: "FormViewer",
+          clientName: "FormRenderer",
         }).catch((e) => {
           this.authError = e.message;
         });

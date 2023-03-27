@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import FormViewer from "@/components/FormViewer.vue";
+import FormRenderer from "@/components/FormRenderer.vue";
 </script>
 
 <template>
   <main>
-    <FormViewer />
+    <FormRenderer />
   </main>
 </template>
 
