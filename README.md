@@ -9,6 +9,54 @@ be represented in RDF.
 
 To generate such form definition, one can use the [smessie/FormGenerator](https://github.com/smessie/FormGenerator) app.
 
+## Notes on the input files
+
+The Dataset file could contain any predefined content that should be inserted in the form loaded from the form description file. 
+
+This FormViewer application uses the [Solid-UI](http://www.w3.org/ns/ui#) ontology to describe and understand how forms should look like.
+However, any ontology can be used to define the form description that is passed along to the application. Here is where the Notation3 conversion rules file comes into play.
+This file should contain all rules needed to map the vocabulary used for the given form description towards a description using the Solid-UI vocabulary.
+We call this the schema alignment tasks and in fact translates the form description in the data vocabulary to the form description in the app vocabulary (i.e. Solid-UI).
+An example of such a rule is the following where we go from a definition using the SHACL vocabulary to a definition in the Solid-UI vocabulary.
+
+```turtle
+@prefix shacl: <http://www.w3.org/ns/shacl#>.
+@prefix ui: <http://www.w3.org/ns/ui#>.
+@prefix schema: <http://www.w3.org/2001/XMLSchema#>.
+
+{
+    ?uri a shacl:PropertyShape;
+        shacl:datatype schema:string;
+        shacl:path ?binding.
+} => {
+    ?uri a ui:SingleLineTextField;
+        ui:property ?binding.
+}.
+```
+
+The form description file should also contain some data that describes what should happen with the data when the submit button is pressed. This is called the footprint tasks.
+For this, a basic version of the [Function Ontology (FnO)](https://w3id.org/function/spec) and the policy concept as first described in the [Orchestrator spec](https://mellonscholarlycommunication.github.io/spec-orchestrator/#policy-sec) and [Koreographeye](https://github.com/eyereasoner/Koreografeye) are used.
+The following example shows how to define a policy that will be executed when the submit button is pressed.
+
+```turtle
+@prefix pol: <https://www.example.org/ns/policy#> .
+@prefix fno: <https://w3id.org/function/ontology#> .
+@prefix ex: <http://example.org/> .
+
+{
+    ?id ex:event ex:Submit.
+} => {
+    ex:PostPolicy pol:policy [
+        a fno:Execution ;
+        fno:executes ex:httpRequest ;
+        ex:method "POST" ;
+        ex:url <https://httpbin.org/post> ;
+        ex:contentType "application/ld+json"
+    ] .
+}.
+```
+
+
 ## Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
