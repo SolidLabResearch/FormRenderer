@@ -37,6 +37,7 @@ An example of such a rule is the following where we go from a definition using t
 The form description file should also contain some data that describes what should happen with the data when the submit button is pressed. This is called the footprint tasks.
 For this, a basic version of the [Function Ontology (FnO)](https://w3id.org/function/spec) and the policy concept as first described in the [Orchestrator spec](https://mellonscholarlycommunication.github.io/spec-orchestrator/#policy-sec) and [Koreographeye](https://github.com/eyereasoner/Koreografeye) are used.
 The following example shows how to define a policy that will be executed when the submit button is pressed.
+Multiple policies are supported.
 
 ```turtle
 @prefix pol: <https://www.example.org/ns/policy#> .
@@ -54,6 +55,24 @@ The following example shows how to define a policy that will be executed when th
         ex:contentType "application/ld+json"
     ] .
 }.
+```
+
+Likewise, a policy can be defined that will redirect the user to another page when the submit button is pressed.
+
+```turtle
+@prefix pol: <https://www.example.org/ns/policy#> .
+@prefix fno: <https://w3id.org/function/ontology#> .
+@prefix ex: <http://example.org/> .
+
+{
+    ?id ex:event ex:Submit.
+} => {
+    ex:RedirectPolicy pol:policy [
+        a fno:Execution ;
+        fno:executes ex:redirect ;
+        ex:url <https://formgenerator.smessie.com>
+  ] .
+} .
 ```
 
 

@@ -399,12 +399,21 @@ export default {
       }
       const data = this.parseSubmitData();
 
+      let redirectPolicy;
+
       for (const policy of policies) {
         if (policy.executionTarget === "http://example.org/httpRequest") {
           await this.submitHttpRequest(policy, data);
+        } else if (policy.executionTarget === "http://example.org/redirect") {
+          redirectPolicy = policy;
         } else {
           this.errors.push("Unknown execution target: " + policy.executionTarget);
         }
+      }
+
+      if (redirectPolicy) {
+        // Redirect to the URL specified in the policy
+        window.location.replace(redirectPolicy.url);
       }
     },
     async parseSubmitPolicy(doc) {
@@ -417,8 +426,8 @@ export default {
         ?id pol:policy ?policy .
         ?policy a fno:Execution .
         ?policy fno:executes ?executionTarget .
-        ?policy ex:method ?method .
         ?policy ex:url ?url .
+        OPTIONAL { ?policy ex:method ?method } .
         OPTIONAL { ?policy ex:contentType ?contentType } .
       }
       `;
@@ -438,8 +447,8 @@ export default {
       return bindings.map((row) => {
         return {
           executionTarget: row.get("executionTarget").value,
-          method: row.get("method").value,
           url: row.get("url").value,
+          method: row.get("method")?.value,
           contentType: row.get("contentType")?.value,
         };
       });
