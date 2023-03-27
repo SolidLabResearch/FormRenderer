@@ -31,7 +31,7 @@
           <MDBInput label="N3 Conversion Rules URL" type="url" v-model="rules" style="margin-top: 1rem" />
           <small>Leave this URL empty to not apply any schema alignment tasks.</small>
           <small class="text-danger" v-if="rulesError"><br>{{ rulesError }}</small>
-          <MDBInput label="Form description URI" type="url" v-model="form" style="margin-top: 1rem" />
+          <MDBInput label="Form description URI" type="url" v-model="formUrl" style="margin-top: 1rem" />
           <small>URI to the specific form in the form description document.</small>
           <small class="text-danger" v-if="formError"><br>{{ formError }}</small>
         </MDBCardText>
@@ -46,6 +46,9 @@
         <MDBCardText>
           <div v-for="(error, index) in errors" :key="index" class="alert alert-danger" role="alert">
             {{ error }}
+          </div>
+          <div v-for="(success, index) in successes" :key="index" class="alert alert-success" role="alert">
+            {{ success }}
           </div>
           <div v-if="fields.length">
             <div v-for="(field, index) in fields" :key="index">
@@ -69,6 +72,8 @@
                 <ChoiceField :field="field" :index="index" />
               </div>
             </div>
+
+            <MDBBtn color="primary" @click="submit" id="submit-btn">Submit</MDBBtn>
           </div>
           <div v-else>
             <p>No data to display.</p>
@@ -82,7 +87,7 @@
 <script>
 import { MDBBtn, MDBCard, MDBCardBody, MDBCardText, MDBCardTitle, MDBContainer, MDBInput } from "mdb-vue-ui-kit";
 import { fetch, getDefaultSession, handleIncomingRedirect, login, logout } from "@inrupt/solid-client-authn-browser";
-import { QueryEngine } from "@comunica/query-sparql-solid";
+import { QueryEngine } from "@comunica/query-sparql";
 import { v4 as uuid } from "uuid";
 import SingleLineTextField from "@/components/fields/SingleLineTextField.vue";
 import MultiLineTextField from "@/components/fields/MultiLineTextField.vue";
@@ -114,6 +119,7 @@ export default {
       loggedIn: null,
       doc: "",
       rules: "",
+      formUrl: "",
       form: "",
       docError: "",
       rulesError: "",
@@ -121,6 +127,7 @@ export default {
       engine: new QueryEngine(),
       fields: [],
       errors: [],
+      successes: [],
     };
   },
   created() {
@@ -141,7 +148,7 @@ export default {
           this.rules = parsedQuery.rules;
         }
         if (parsedQuery.form) {
-          this.form = parsedQuery.form;
+          this.formUrl = parsedQuery.form;
         }
       }
     });
@@ -188,7 +195,7 @@ export default {
         query: {
           doc: this.doc,
           rules: this.rules,
-          form: this.form,
+          form: this.formUrl,
         },
       });
     },
@@ -198,8 +205,8 @@ export default {
 
       this.docError = this.isValidUrl(this.doc) ? "" : "Please enter a valid URL.";
       this.rulesError = !this.rules || this.isValidUrl(this.rules) ? "" : "Please enter a valid URL.";
-      this.formError = this.isValidUrl(this.form)
-        ? this.form.includes("#")
+      this.formError = this.isValidUrl(this.formUrl)
+        ? this.formUrl.includes("#")
           ? ""
           : "Make sure to enter a URI to a specific form description instead of a document URL."
         : "Please enter a valid URI.";
@@ -209,7 +216,7 @@ export default {
       }
 
       const n3doc = await this.loadContentOfUrl(this.doc);
-      let n3form = await this.loadContentOfUrl(this.form);
+      let n3form = await this.loadContentOfUrl(this.formUrl);
 
       console.log("n3doc", n3doc);
       console.log("n3form", n3form);
@@ -220,7 +227,7 @@ export default {
 
         // Add base to doc if not yet. Fixing relative IRIs.
         if (!n3form.includes("@base") && !n3form.includes("BASE")) {
-          n3form = `@base <${this.doc}> .\n${n3form}`;
+          n3form = `@base <${this.doc}#> .\n${n3form}`;
         }
 
         const options = { blogic: false, outputType: "string" };
@@ -228,7 +235,9 @@ export default {
         console.log("n3form after rules", n3form);
       }
 
-      this.fields = await this.parseForm(n3form);
+      this.form = n3form;
+
+      this.fields = await this.parseForm(this.form);
 
       for (const field of this.fields) {
         const data = await this.queryDataForField(n3doc, field);
@@ -259,7 +268,7 @@ export default {
 
       // Add base to doc if not yet. Fixing relative IRIs.
       if (!content.includes("@base") && !content.includes("BASE")) {
-        content = `@base <${url.split("#")[0]}> .\n${content}`;
+        content = `@base <${url.split("#")[0]}#> .\n${content}`;
       }
       return content;
     },
@@ -268,7 +277,7 @@ export default {
       PREFIX ui: <http://www.w3.org/ns/ui#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       SELECT ?type ?property ?label ?from ?required ?multiple ?sequence WHERE {
-        <${this.form}> ui:parts ?list .
+        <${this.formUrl}> ui:parts ?list .
         ?list rdf:rest*/rdf:first ?field .
         ?field a ?type;
           ui:property ?property.
@@ -287,7 +296,7 @@ export default {
               type: "stringSource",
               value: n3form,
               mediaType: "text/n3",
-              baseIRI: this.form.split("#")[0],
+              baseIRI: this.formUrl.split("#")[0] + "#",
             },
           ],
         })
@@ -329,7 +338,7 @@ export default {
                   type: "stringSource",
                   value: n3form,
                   mediaType: "text/n3",
-                  baseIRI: this.form.split("#")[0],
+                  baseIRI: this.formUrl.split("#")[0] + "#",
                 },
               ],
             })
@@ -360,7 +369,7 @@ export default {
               type: "stringSource",
               value: data,
               mediaType: "text/n3",
-              baseIRI: this.doc.split("#")[0],
+              baseIRI: this.doc.split("#")[0] + "#",
             },
           ],
         })
@@ -372,6 +381,105 @@ export default {
           value: row.get("value").value,
         };
       });
+    },
+    async submit(event) {
+      event.preventDefault();
+
+      const options = { blogic: false, outputType: "string" };
+      const reasonerResult = await n3reasoner(
+        `PREFIX ex: <http://example.org/>\n<${this.formUrl}> ex:event ex:Submit .`,
+        this.form,
+        options
+      );
+
+      const policies = await this.parseSubmitPolicy(reasonerResult);
+      if (!policies) {
+        this.errors.push("No ex:Submit policy found for this form.");
+        return;
+      }
+      const data = this.parseSubmitData();
+
+      for (const policy of policies) {
+        if (policy.executionTarget === "http://example.org/httpRequest") {
+          await this.submitHttpRequest(policy, data);
+        } else {
+          this.errors.push("Unknown execution target: " + policy.executionTarget);
+        }
+      }
+    },
+    async parseSubmitPolicy(doc) {
+      const queryPolicy = `
+      PREFIX ex: <http://example.org/>
+      PREFIX pol: <https://www.example.org/ns/policy#>
+      PREFIX fno: <https://w3id.org/function/ontology#>
+
+      SELECT ?executionTarget ?method ?url ?contentType WHERE {
+        ?id pol:policy ?policy .
+        ?policy a fno:Execution .
+        ?policy fno:executes ?executionTarget .
+        ?policy ex:method ?method .
+        ?policy ex:url ?url .
+        OPTIONAL { ?policy ex:contentType ?contentType } .
+      }
+      `;
+      const bindings = await (
+        await this.engine.queryBindings(queryPolicy, {
+          sources: [
+            {
+              type: "stringSource",
+              value: doc,
+              mediaType: "text/n3",
+              baseIRI: this.formUrl.split("#")[0] + "#",
+            },
+          ],
+        })
+      ).toArray();
+
+      return bindings.map((row) => {
+        return {
+          executionTarget: row.get("executionTarget").value,
+          method: row.get("method").value,
+          url: row.get("url").value,
+          contentType: row.get("contentType")?.value,
+        };
+      });
+    },
+    parseSubmitData() {
+      let data = "";
+      for (const field of this.fields) {
+        for (const value of field.values) {
+          console.log(`Field: ${field.property} has value`, value);
+          if (field.type === "SingleLineTextField" || field.type === "MultiLineTextField") {
+            data += `<${value.subject}> <${field.property}> "${value.value}" .\n`;
+          } else if (field.type === "Choice") {
+            data += `<${value.subject}> <${field.property}> <${value.value}> .\n`;
+          } else if (field.type === "BooleanField") {
+            data += `<${value.subject}> <${field.property}> ${value.value ? "true" : "false"} .\n`;
+          } else if (field.type === "DateField") {
+            data += `<${value.subject}> <${field.property}> "${new Date(
+              value.value
+            ).toISOString()}"^^<http://www.w3.org/2001/XMLSchema#date> .\n`;
+          } else {
+            console.log("Unknown field type", field.type);
+          }
+        }
+      }
+      return data;
+    },
+    async submitHttpRequest(policy, data) {
+      const response = await fetch(policy.url, {
+        method: policy.method,
+        headers: {
+          "Content-Type": policy.contentType || "text/n3",
+        },
+        body: data,
+      });
+
+      if (response.ok) {
+        this.successes.push("Form submitted successfully via HTTP request.");
+      } else {
+        this.errors.push("HTTP request failed: " + response.status);
+      }
     },
   },
   watch: {
