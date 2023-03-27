@@ -400,10 +400,11 @@ export default {
       const data = this.parseSubmitData();
 
       let redirectPolicy;
+      let success = true;
 
       for (const policy of policies) {
         if (policy.executionTarget === "http://example.org/httpRequest") {
-          await this.submitHttpRequest(policy, data);
+          success = (await this.submitHttpRequest(policy, data)) && success;
         } else if (policy.executionTarget === "http://example.org/redirect") {
           redirectPolicy = policy;
         } else {
@@ -411,9 +412,9 @@ export default {
         }
       }
 
-      if (redirectPolicy) {
+      if (redirectPolicy && success) {
         // Redirect to the URL specified in the policy
-        window.location.replace(redirectPolicy.url);
+        window.location.href = redirectPolicy.url;
       }
     },
     async parseSubmitPolicy(doc) {
@@ -486,8 +487,10 @@ export default {
 
       if (response.ok) {
         this.successes.push("Form submitted successfully via HTTP request.");
+        return true;
       } else {
         this.errors.push("HTTP request failed: " + response.status);
+        return false;
       }
     },
   },
