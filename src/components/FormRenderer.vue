@@ -83,7 +83,18 @@
               </div>
             </div>
 
-            <MDBBtn color="primary" @click="submit" id="submit-btn">Submit</MDBBtn>
+            <hr />
+
+            <label>Subject URI to use for the data <span class="text-danger">*</span></label>
+            <select class="form-select" v-model="subject" style="margin-top: 0.5rem">
+              <option v-for="(subject, index) in subjectPossibilities" :key="index" :value="subject">
+                {{ subject }}
+              </option>
+            </select>
+            <input class="form-control" v-model="otherSubject" v-if="subject === 'Other'" @change="updatedOtherSubject">
+            <small class="text-danger" v-if="otherSubjectError && subject === 'Other'">{{ otherSubjectError }}<br></small>
+
+            <MDBBtn color="primary" @click="submit" id="submit-btn" style="margin-top: 1em">Submit</MDBBtn>
           </div>
           <div v-else>
             <p>No data to display.</p>
@@ -135,6 +146,10 @@ export default {
       rulesError: "",
       formError: "",
       formTargetClass: "",
+      subject: "",
+      subjectPossibilities: [],
+      otherSubject: "",
+      otherSubjectError: "",
       engine: new QueryEngine(),
       fields: [],
       errors: [],
@@ -259,9 +274,38 @@ export default {
         field.values = data || [];
 
         if (field.required && !field.values.length) {
-          field.values = [{ value: undefined, subject: `${this.doc}#${uuid()}` }];
+          field.values = [{ value: undefined }];
         }
       }
+
+      // Add suggestions for subject
+      // Get all existing subjects for the form target class in the data document
+      const query = `
+      SELECT ?subject WHERE {
+        ?subject a <${this.formTargetClass}> .
+      }
+      `;
+      const bindings = await (
+          await this.engine.queryBindings(query, {
+            sources: [
+              {
+                type: "stringSource",
+                value: n3doc,
+                mediaType: "text/n3",
+              },
+            ],
+          })
+      ).toArray();
+      this.subjectPossibilities = bindings.map((binding) => binding.get("subject").value);
+
+      // Add random subject
+      this.subjectPossibilities.push(`urn:uuid:${uuid()}`);
+
+      // Allow user input
+      this.subjectPossibilities.push("Other");
+
+      // Set default subject as first possibility
+      this.subject = this.subjectPossibilities[0];
     },
     isValidUrl(url) {
       try {
@@ -370,7 +414,7 @@ export default {
     },
     async queryDataForField(data, field) {
       const query = `
-      SELECT ?s ?value WHERE {
+      SELECT ?value WHERE {
         ?s a <${this.formTargetClass}> ;
           <${field.property}> ?value.
       }
@@ -391,13 +435,20 @@ export default {
 
       return bindings.map((row) => {
         return {
-          subject: row.get("s").value,
           value: row.get("value").value,
         };
       });
     },
     async submit(event) {
       event.preventDefault();
+
+      if (this.subject === 'Other' && !this.otherSubject) {
+        this.otherSubjectError = 'Please fill in a valid subject.';
+        return;
+      }
+      if (this.otherSubjectError) {
+        return;
+      }
 
       const options = { blogic: false, outputType: "string" };
       const reasonerResult = await n3reasoner(
@@ -469,18 +520,20 @@ export default {
       });
     },
     parseSubmitData() {
-      let data = "";
+      const subject = this.subject === 'Other' ? this.otherSubject : this.subject;
+      let data = `<${subject}> a <${this.formTargetClass}> .\n`;
+
       for (const field of this.fields) {
         for (const value of field.values) {
           console.log(`Field: ${field.property} has value`, value);
           if (field.type === "SingleLineTextField" || field.type === "MultiLineTextField") {
-            data += `<${value.subject}> a <${this.formTargetClass}> ; <${field.property}> "${value.value}" .\n`;
+            data += `<${subject}> <${field.property}> "${value.value}" .\n`;
           } else if (field.type === "Choice") {
-            data += `<${value.subject}> a <${this.formTargetClass}> ; <${field.property}> <${value.value}> .\n`;
+            data += `<${subject}> <${field.property}> <${value.value}> .\n`;
           } else if (field.type === "BooleanField") {
-            data += `<${value.subject}> a <${this.formTargetClass}> ; <${field.property}> ${value.value ? "true" : "false"} .\n`;
+            data += `<${subject}> <${field.property}> ${value.value ? "true" : "false"} .\n`;
           } else if (field.type === "DateField") {
-            data += `<${value.subject}> a <${this.formTargetClass}> ; <${field.property}> "${new Date(
+            data += `<${subject}> <${field.property}> "${new Date(
               value.value
             ).toISOString()}"^^<http://www.w3.org/2001/XMLSchema#date> .\n`;
           } else {
@@ -506,6 +559,34 @@ export default {
         this.errors.push("HTTP request failed: " + response.status);
         return false;
       }
+    },
+    async updatedOtherSubject() {
+      this.otherSubjectError = "";
+
+      if (this.otherSubject.includes(':')) {
+        if (!this.otherSubject.includes('://')) {
+          this.otherSubject = await this.replacePrefixInSubject(this.otherSubject);
+          if (!this.otherSubject) {
+            this.otherSubjectError = 'Please fill in a valid subject.';
+          }
+        }
+      } else {
+        this.otherSubjectError = 'Please fill in a valid subject.';
+      }
+    },
+    async replacePrefixInSubject(subject) {
+      // Do call to prefix.cc to get the full URI
+      const [prefix, suffix] = subject.split(':');
+      const response = await fetch(`https://prefix.cc/${prefix}.file.json`);
+      const json = await response.json();
+      const uri = json[prefix];
+      if (uri) {
+        subject = uri + suffix;
+      } else {
+        this.otherSubjectError = `Could not find a prefix for '${prefix}'!`;
+        return undefined;
+      }
+      return subject;
     },
   },
   watch: {
