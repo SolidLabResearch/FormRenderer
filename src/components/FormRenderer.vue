@@ -134,6 +134,7 @@ export default {
       docError: "",
       rulesError: "",
       formError: "",
+      formTargetClass: "",
       engine: new QueryEngine(),
       fields: [],
       errors: [],
@@ -286,8 +287,9 @@ export default {
       const query = `
       PREFIX ui: <http://www.w3.org/ns/ui#>
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-      SELECT ?type ?property ?label ?from ?required ?multiple ?sequence WHERE {
-        <${this.formUrl}> ui:parts ?list .
+      SELECT ?targetClass ?type ?property ?label ?from ?required ?multiple ?sequence WHERE {
+        <${this.formUrl}> ui:parts ?list ;
+          ui:property ?targetClass .
         ?list rdf:rest*/rdf:first ?field .
         ?field a ?type;
           ui:property ?property.
@@ -313,6 +315,7 @@ export default {
       ).toArray();
 
       const fields = bindings.map((row) => {
+        this.formTargetClass = row.get("targetClass").value;
         return {
           type: row.get("type").value.split("#")[1],
           property: row.get("property").value,
@@ -368,7 +371,8 @@ export default {
     async queryDataForField(data, field) {
       const query = `
       SELECT ?s ?value WHERE {
-        ?s <${field.property}> ?value.
+        ?s a <${this.formTargetClass}> ;
+          <${field.property}> ?value.
       }
       `;
 
@@ -470,13 +474,13 @@ export default {
         for (const value of field.values) {
           console.log(`Field: ${field.property} has value`, value);
           if (field.type === "SingleLineTextField" || field.type === "MultiLineTextField") {
-            data += `<${value.subject}> <${field.property}> "${value.value}" .\n`;
+            data += `<${value.subject}> a <${this.formTargetClass}> ; <${field.property}> "${value.value}" .\n`;
           } else if (field.type === "Choice") {
-            data += `<${value.subject}> <${field.property}> <${value.value}> .\n`;
+            data += `<${value.subject}> a <${this.formTargetClass}> ; <${field.property}> <${value.value}> .\n`;
           } else if (field.type === "BooleanField") {
-            data += `<${value.subject}> <${field.property}> ${value.value ? "true" : "false"} .\n`;
+            data += `<${value.subject}> a <${this.formTargetClass}> ; <${field.property}> ${value.value ? "true" : "false"} .\n`;
           } else if (field.type === "DateField") {
-            data += `<${value.subject}> <${field.property}> "${new Date(
+            data += `<${value.subject}> a <${this.formTargetClass}> ; <${field.property}> "${new Date(
               value.value
             ).toISOString()}"^^<http://www.w3.org/2001/XMLSchema#date> .\n`;
           } else {
