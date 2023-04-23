@@ -265,6 +265,11 @@ export default {
 
       this.fields = await this.parseForm(this.form);
 
+      if (!this.fields.length) {
+        this.errors.push("No fields found in form.");
+        return;
+      }
+
       for (const field of this.fields) {
         const data = await this.queryDataForField(n3doc, field);
         console.log("value", data);
