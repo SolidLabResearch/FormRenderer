@@ -229,7 +229,7 @@ export default {
       event.preventDefault();
       this.errors = [];
 
-      this.docError = this.isValidUrl(this.doc) ? "" : "Please enter a valid URL.";
+      this.docError = !this.doc || this.isValidUrl(this.doc) ? "" : "Please enter a valid URL.";
       this.rulesError = !this.rules || this.isValidUrl(this.rules) ? "" : "Please enter a valid URL.";
       this.formError = this.isValidUrl(this.formUrl)
         ? this.formUrl.includes("#")
@@ -241,7 +241,7 @@ export default {
         return;
       }
 
-      const n3doc = await this.loadContentOfUrl(this.doc);
+      const n3doc = this.doc ? await this.loadContentOfUrl(this.doc) : "";
       let n3form = await this.loadContentOfUrl(this.formUrl);
 
       console.log("n3doc", n3doc);
@@ -253,7 +253,7 @@ export default {
 
         // Add base to doc if not yet. Fixing relative IRIs.
         if (!n3form.includes("@base") && !n3form.includes("BASE")) {
-          n3form = `@base <${this.doc}#> .\n${n3form}`;
+          n3form = `@base <${this.formUrl.split("#")[0]}#> .\n${n3form}`;
         }
 
         const options = { blogic: false, outputType: "string" };
@@ -418,6 +418,11 @@ export default {
       return fields;
     },
     async queryDataForField(data, field) {
+      if (!this.doc) {
+        // No data document, so no data to query
+        return [];
+      }
+
       const query = `
       SELECT ?value WHERE {
         ?s a <${this.formTargetClass}> ;
