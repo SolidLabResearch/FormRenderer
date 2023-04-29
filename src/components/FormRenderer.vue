@@ -447,11 +447,18 @@ export default {
     async submit(event) {
       event.preventDefault();
 
+      this.errors = [];
+      this.successes = [];
+
       if (this.subject === 'Other' && !this.otherSubject) {
         this.otherSubjectError = 'Please fill in a valid subject.';
         return;
       }
       if (this.otherSubjectError) {
+        return;
+      }
+
+      if (!this.validateFields()) {
         return;
       }
 
@@ -592,6 +599,16 @@ export default {
         return undefined;
       }
       return subject;
+    },
+    validateFields() {
+      let valid = true;
+      for (const field of this.fields) {
+        if (field.required && field.values.filter((v) => v.value && v.value.trim().length !== 0).length === 0) {
+          this.errors.push(`Field "${field.label}" is required.`);
+          valid = false;
+        }
+      }
+      return valid;
     },
   },
   watch: {
