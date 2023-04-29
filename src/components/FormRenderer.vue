@@ -273,7 +273,7 @@ export default {
         }
         field.values = data || [];
 
-        if (field.required && !field.values.length) {
+        if (!field.values.length) {
           field.values = [{ value: undefined }];
         }
       }
@@ -537,6 +537,9 @@ export default {
 
       for (const field of this.fields) {
         for (const value of field.values) {
+          if (!value.value?.trim()) {
+            continue;
+          }
           console.log(`Field: ${field.property} has value`, value);
           if (field.type === "SingleLineTextField" || field.type === "MultiLineTextField") {
             data += `<${subject}> <${field.property}> "${value.value}" .\n`;
