@@ -251,11 +251,6 @@ export default {
         // Apply schema alignment rules
         const n3rules = await this.loadContentOfUrl(this.rules);
 
-        // Add base to doc if not yet. Fixing relative IRIs.
-        if (!n3form.includes("@base") && !n3form.includes("BASE")) {
-          n3form = `@base <${this.formUrl.split("#")[0]}#> .\n${n3form}`;
-        }
-
         const options = { blogic: false, outputType: "string" };
         n3form = await n3reasoner(n3form, n3rules, options);
         console.log("n3form after rules", n3form);
@@ -328,7 +323,7 @@ export default {
 
       // Add base to doc if not yet. Fixing relative IRIs.
       if (!content.includes("@base") && !content.includes("BASE")) {
-        content = `@base <${url.split("#")[0]}#> .\n${content}`;
+        content = `@base <${url.split("#")[0]}> .\n${content}`;
       }
       return content;
     },
