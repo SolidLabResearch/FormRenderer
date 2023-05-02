@@ -352,7 +352,7 @@ export default {
               type: "stringSource",
               value: n3form,
               mediaType: "text/n3",
-              baseIRI: this.formUrl.split("#")[0] + "#",
+              baseIRI: this.formUrl.split("#")[0],
             },
           ],
         })
@@ -395,7 +395,7 @@ export default {
                   type: "stringSource",
                   value: n3form,
                   mediaType: "text/n3",
-                  baseIRI: this.formUrl.split("#")[0] + "#",
+                  baseIRI: this.formUrl.split("#")[0],
                 },
               ],
             })
@@ -432,7 +432,7 @@ export default {
               type: "stringSource",
               value: data,
               mediaType: "text/n3",
-              baseIRI: this.doc.split("#")[0] + "#",
+              baseIRI: this.doc.split("#")[0],
             },
           ],
         })
@@ -516,7 +516,7 @@ export default {
               type: "stringSource",
               value: doc,
               mediaType: "text/n3",
-              baseIRI: this.formUrl.split("#")[0] + "#",
+              baseIRI: this.formUrl.split("#")[0],
             },
           ],
         })
