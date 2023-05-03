@@ -142,6 +142,7 @@ export default {
       rules: "",
       formUrl: "",
       form: "",
+      originalForm: "",
       docError: "",
       rulesError: "",
       formError: "",
@@ -243,6 +244,8 @@ export default {
 
       const n3doc = this.doc ? await this.loadContentOfUrl(this.doc) : "";
       let n3form = await this.loadContentOfUrl(this.formUrl);
+
+      this.originalForm = n3form;
 
       console.log("n3doc", n3doc);
       console.log("n3form", n3form);
@@ -465,7 +468,7 @@ export default {
       const options = { blogic: false, outputType: "string" };
       const reasonerResult = await n3reasoner(
         `PREFIX ex: <http://example.org/>\n<${this.formUrl}> ex:event ex:Submit .`,
-        this.form,
+        this.originalForm,
         options
       );
 
