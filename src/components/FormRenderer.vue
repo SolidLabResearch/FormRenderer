@@ -158,6 +158,34 @@ export default {
     };
   },
   created() {
+    // Restore input data - Step 1
+    // 2 steps because `handleIncomingRedirect` triggers page reload resulting in loss of query data.
+    let watchCalls = 0;
+    this.$watch(
+      () => this.$route.query,
+      () => {
+        watchCalls++;
+        if (watchCalls === 2) {
+          // On second call, the query data contains the actual query parameters from the URL.
+          const query = this.$route.query;
+
+          if (!("code" in query)) {
+            localStorage.setItem("query", JSON.stringify(query));
+            if (query.doc) {
+              this.doc = query.doc;
+            }
+            if (query.rules) {
+              this.rules = query.rules;
+            }
+            if (query.form) {
+              this.formUrl = query.form;
+            }
+          }
+        }
+      },
+      { immediate: true }
+    );
+
     // Restore solid session
     handleIncomingRedirect({
       restorePreviousSession: true,
@@ -165,33 +193,23 @@ export default {
       this.loggedIn = info.webId;
 
       // Restore input data - Step 2
-      const query = localStorage.getItem("query");
-      if (query) {
-        const parsedQuery = JSON.parse(query);
-        if (parsedQuery.doc) {
-          this.doc = parsedQuery.doc;
-        }
-        if (parsedQuery.rules) {
-          this.rules = parsedQuery.rules;
-        }
-        if (parsedQuery.form) {
-          this.formUrl = parsedQuery.form;
+      // Only on loggedIn, otherwise this will be called before the query params are restored from the URL.
+      if (this.loggedIn) {
+        const query = localStorage.getItem("query");
+        if (query) {
+          const parsedQuery = JSON.parse(query);
+          if (parsedQuery.doc) {
+            this.doc = parsedQuery.doc;
+          }
+          if (parsedQuery.rules) {
+            this.rules = parsedQuery.rules;
+          }
+          if (parsedQuery.form) {
+            this.formUrl = parsedQuery.form;
+          }
         }
       }
     });
-
-    // Restore input data - Step 1
-    // 2 steps because `handleIncomingRedirect` is triggers page reload resulting in loss of query data.
-    this.$watch(
-      () => this.$route.query,
-      () => {
-        const query = this.$route.query;
-        if (Object.keys(query).length && !("code" in query)) {
-          localStorage.setItem("query", JSON.stringify(query));
-        }
-      },
-      { immediate: true }
-    );
   },
   methods: {
     async login() {
@@ -624,7 +642,7 @@ export default {
     rules: function () {
       this.updateQueryParams();
     },
-    form: function () {
+    formUrl: function () {
       this.updateQueryParams();
     },
   },
