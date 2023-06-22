@@ -296,6 +296,12 @@ export default {
 
         if (!field.values.length) {
           field.values = [{ value: undefined }];
+        } else if (field.type === 'DateField') {
+          field.values = field.values.map(value => {
+            return {
+              value: new Date(value.value).toISOString().split('T')[0]
+            }
+          });
         }
       }
 
