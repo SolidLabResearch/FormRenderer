@@ -19,13 +19,13 @@
           <div v-if="loggedIn">
             <p class="text-success">
               You are logged in as <em>{{ loggedIn }}</em
-              >.
+            >.
             </p>
             <MDBBtn color="primary" @click="logout">Logout</MDBBtn>
           </div>
           <div v-else>
-            <MDBInput v-model="oidcIssuer" label="OIDC Issuer" type="text" required />
-            <small class="text-danger" v-if="authError">{{ authError }}<br /></small>
+            <MDBInput v-model="oidcIssuer" label="OIDC Issuer" type="text" required/>
+            <small class="text-danger" v-if="authError">{{ authError }}<br/></small>
             <MDBBtn color="primary" @click="login" style="margin-top: 1rem">Login</MDBBtn>
           </div>
         </MDBCardText>
@@ -36,12 +36,12 @@
       <MDBCardBody class="w-100">
         <MDBCardTitle>Input</MDBCardTitle>
         <MDBCardText>
-          <MDBInput label="Dataset URL" type="url" v-model="doc" />
+          <MDBInput label="Dataset URL" type="url" v-model="doc"/>
           <small class="text-danger" v-if="docError">{{ docError }}</small>
-          <MDBInput label="N3 Conversion Rules URL" type="url" v-model="rules" style="margin-top: 1rem" />
+          <MDBInput label="N3 Conversion Rules URL" type="url" v-model="rules" style="margin-top: 1rem"/>
           <small>Leave this URL empty to not apply any schema alignment tasks.</small>
           <small class="text-danger" v-if="rulesError"><br>{{ rulesError }}</small>
-          <MDBInput label="Form description URI" type="url" v-model="formUrl" style="margin-top: 1rem" />
+          <MDBInput label="Form description URI" type="url" v-model="formUrl" style="margin-top: 1rem"/>
           <small>URI to the specific form in the form description document.</small>
           <small class="text-danger" v-if="formError"><br>{{ formError }}</small>
         </MDBCardText>
@@ -63,27 +63,27 @@
           <div v-if="fields.length">
             <div v-for="(field, index) in fields" :key="index">
               <div v-if="field.type === 'SingleLineTextField'" style="margin-bottom: 3rem">
-                <SingleLineTextField :field="field" :index="index" />
+                <SingleLineTextField :field="field" :index="index"/>
               </div>
 
               <div v-if="field.type === 'MultiLineTextField'" style="margin-bottom: 3rem">
-                <MultiLineTextField :field="field" :index="index" />
+                <MultiLineTextField :field="field" :index="index"/>
               </div>
 
               <div v-if="field.type === 'BooleanField'" style="margin-bottom: 3rem">
-                <BooleanField :field="field" :index="index" />
+                <BooleanField :field="field" :index="index"/>
               </div>
 
               <div v-if="field.type === 'DateField'" style="margin-bottom: 3rem">
-                <DateField :field="field" :index="index" />
+                <DateField :field="field" :index="index"/>
               </div>
 
               <div v-if="field.type === 'Choice'" style="margin-bottom: 3rem">
-                <ChoiceField :field="field" :index="index" />
+                <ChoiceField :field="field" :index="index"/>
               </div>
             </div>
 
-            <hr />
+            <hr/>
 
             <label>Subject URI to use for the data <span class="text-danger">*</span></label>
             <select class="form-select" v-model="subject" style="margin-top: 0.5rem">
@@ -92,7 +92,9 @@
               </option>
             </select>
             <input class="form-control" v-model="otherSubject" v-if="subject === 'Other'" @change="updatedOtherSubject">
-            <small class="text-danger" v-if="otherSubjectError && subject === 'Other'">{{ otherSubjectError }}<br></small>
+            <small class="text-danger" v-if="otherSubjectError && subject === 'Other'">{{
+                otherSubjectError
+              }}<br></small>
 
             <MDBBtn color="primary" @click="submit" id="submit-btn" style="margin-top: 1em">Submit</MDBBtn>
           </div>
@@ -106,16 +108,16 @@
 </template>
 
 <script>
-import { MDBBtn, MDBCard, MDBCardBody, MDBCardText, MDBCardTitle, MDBContainer, MDBInput } from "mdb-vue-ui-kit";
-import { fetch, getDefaultSession, handleIncomingRedirect, login, logout } from "@inrupt/solid-client-authn-browser";
-import { QueryEngine } from "@comunica/query-sparql";
-import { v4 as uuid } from "uuid";
+import {MDBBtn, MDBCard, MDBCardBody, MDBCardText, MDBCardTitle, MDBContainer, MDBInput} from "mdb-vue-ui-kit";
+import {fetch, getDefaultSession, handleIncomingRedirect, login, logout} from "@inrupt/solid-client-authn-browser";
+import {QueryEngine} from "@comunica/query-sparql";
+import {v4 as uuid} from "uuid";
 import SingleLineTextField from "@/components/fields/SingleLineTextField.vue";
 import MultiLineTextField from "@/components/fields/MultiLineTextField.vue";
 import BooleanField from "@/components/fields/BooleanField.vue";
 import DateField from "@/components/fields/DateField.vue";
 import ChoiceField from "@/components/fields/ChoiceField.vue";
-import { n3reasoner } from "eyereasoner";
+import {n3reasoner} from "eyereasoner";
 
 export default {
   name: "FormRenderer",
@@ -163,28 +165,28 @@ export default {
     // 2 steps because `handleIncomingRedirect` triggers page reload resulting in loss of query data.
     let watchCalls = 0;
     this.$watch(
-      () => this.$route.query,
-      () => {
-        watchCalls++;
-        if (watchCalls === 2) {
-          // On second call, the query data contains the actual query parameters from the URL.
-          const query = this.$route.query;
+        () => this.$route.query,
+        () => {
+          watchCalls++;
+          if (watchCalls === 2) {
+            // On second call, the query data contains the actual query parameters from the URL.
+            const query = this.$route.query;
 
-          if (!("code" in query)) {
-            localStorage.setItem("query", JSON.stringify(query));
-            if (query.doc) {
-              this.doc = query.doc;
-            }
-            if (query.rules) {
-              this.rules = query.rules;
-            }
-            if (query.form) {
-              this.formUrl = query.form;
+            if (!("code" in query)) {
+              localStorage.setItem("query", JSON.stringify(query));
+              if (query.doc) {
+                this.doc = query.doc;
+              }
+              if (query.rules) {
+                this.rules = query.rules;
+              }
+              if (query.form) {
+                this.formUrl = query.form;
+              }
             }
           }
-        }
-      },
-      { immediate: true }
+        },
+        {immediate: true}
     );
 
     // Restore solid session
@@ -252,10 +254,10 @@ export default {
       this.docError = !this.doc || this.isValidUrl(this.doc) ? "" : "Please enter a valid URL.";
       this.rulesError = !this.rules || this.isValidUrl(this.rules) ? "" : "Please enter a valid URL.";
       this.formError = this.isValidUrl(this.formUrl)
-        ? this.formUrl.includes("#")
-          ? ""
-          : "Make sure to enter a URI to a specific form description instead of a document URL."
-        : "Please enter a valid URI.";
+          ? this.formUrl.includes("#")
+              ? ""
+              : "Make sure to enter a URI to a specific form description instead of a document URL."
+          : "Please enter a valid URI.";
 
       if (this.docError || this.rulesError || this.formError) {
         return;
@@ -273,7 +275,7 @@ export default {
         // Apply schema alignment rules
         const n3rules = await this.loadContentOfUrl(this.rules);
 
-        const options = { blogic: false, outputType: "string" };
+        const options = {blogic: false, outputType: "string"};
         n3form = await n3reasoner(n3form, n3rules, options);
         console.log("n3form after rules", n3form);
       }
@@ -296,7 +298,7 @@ export default {
         field.values = data || [];
 
         if (!field.values.length) {
-          field.values = [{ value: undefined, subject: undefined }];
+          field.values = [{value: undefined, subject: undefined}];
         } else if (field.type === 'DateField') {
           field.values = field.values.map(value => {
             return {
@@ -377,16 +379,16 @@ export default {
       `;
 
       const bindings = await (
-        await this.engine.queryBindings(query, {
-          sources: [
-            {
-              type: "stringSource",
-              value: n3form,
-              mediaType: "text/n3",
-              baseIRI: this.formUrl.split("#")[0],
-            },
-          ],
-        })
+          await this.engine.queryBindings(query, {
+            sources: [
+              {
+                type: "stringSource",
+                value: n3form,
+                mediaType: "text/n3",
+                baseIRI: this.formUrl.split("#")[0],
+              },
+            ],
+          })
       ).toArray();
 
       const fields = bindings.map((row) => {
@@ -420,16 +422,16 @@ export default {
           `;
 
           const bindings = await (
-            await this.engine.queryBindings(query, {
-              sources: [
-                {
-                  type: "stringSource",
-                  value: n3form,
-                  mediaType: "text/n3",
-                  baseIRI: this.formUrl.split("#")[0],
-                },
-              ],
-            })
+              await this.engine.queryBindings(query, {
+                sources: [
+                  {
+                    type: "stringSource",
+                    value: n3form,
+                    mediaType: "text/n3",
+                    baseIRI: this.formUrl.split("#")[0],
+                  },
+                ],
+              })
           ).toArray();
 
           field.options = bindings.map((row) => {
@@ -457,16 +459,16 @@ export default {
       `;
 
       const bindings = await (
-        await this.engine.queryBindings(query, {
-          sources: [
-            {
-              type: "stringSource",
-              value: data,
-              mediaType: "text/n3",
-              baseIRI: this.doc.split("#")[0],
-            },
-          ],
-        })
+          await this.engine.queryBindings(query, {
+            sources: [
+              {
+                type: "stringSource",
+                value: data,
+                mediaType: "text/n3",
+                baseIRI: this.doc.split("#")[0],
+              },
+            ],
+          })
       ).toArray();
 
       return bindings.map((row) => {
@@ -494,11 +496,11 @@ export default {
         return;
       }
 
-      const options = { blogic: false, outputType: "string" };
+      const options = {blogic: false, outputType: "string"};
       const reasonerResult = await n3reasoner(
-        `PREFIX ex: <http://example.org/>\n<${this.formUrl}> ex:event ex:Submit .`,
-        this.originalForm,
-        options
+          `PREFIX ex: <http://example.org/>\n<${this.formUrl}> ex:event ex:Submit .`,
+          this.originalForm,
+          options
       );
 
       const policies = await this.parseSubmitPolicy(reasonerResult);
@@ -545,16 +547,16 @@ export default {
       }
       `;
       const bindings = await (
-        await this.engine.queryBindings(queryPolicy, {
-          sources: [
-            {
-              type: "stringSource",
-              value: doc,
-              mediaType: "text/n3",
-              baseIRI: this.formUrl.split("#")[0],
-            },
-          ],
-        })
+          await this.engine.queryBindings(queryPolicy, {
+            sources: [
+              {
+                type: "stringSource",
+                value: doc,
+                mediaType: "text/n3",
+                baseIRI: this.formUrl.split("#")[0],
+              },
+            ],
+          })
       ).toArray();
 
       return bindings.map((row) => {
@@ -583,7 +585,7 @@ export default {
             data += `<${subject || value.subject}> <${field.property}> ${value.value ? "true" : "false"} .\n`;
           } else if (field.type === "DateField") {
             data += `<${subject || value.subject}> <${field.property}> "${new Date(
-              value.value
+                value.value
             ).toISOString()}"^^<http://www.w3.org/2001/XMLSchema#date> .\n`;
           } else {
             console.log("Unknown field type", field.type);
@@ -712,6 +714,7 @@ h1 {
   margin-top: 3rem;
   margin-bottom: 3rem;
 }
+
 .card {
   margin-bottom: 2rem;
 }
