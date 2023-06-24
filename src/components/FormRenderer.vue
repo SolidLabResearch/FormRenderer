@@ -153,6 +153,7 @@ export default {
       otherSubjectError: "",
       engine: new QueryEngine(),
       fields: [],
+      originalFields: [],
       errors: [],
       successes: [],
     };
@@ -295,7 +296,7 @@ export default {
         field.values = data || [];
 
         if (!field.values.length) {
-          field.values = [{ value: undefined }];
+          field.values = [{ value: undefined, subject: undefined }];
         } else if (field.type === 'DateField') {
           field.values = field.values.map(value => {
             return {
@@ -304,6 +305,9 @@ export default {
           });
         }
       }
+
+      // Store original fields for N3 Patch
+      this.originalFields = JSON.parse(JSON.stringify(this.fields));
 
       // Add suggestions for subject
       // Get all existing subjects for the form target class in the data document
@@ -446,7 +450,7 @@ export default {
       }
 
       const query = `
-      SELECT ?value WHERE {
+      SELECT ?value ?s WHERE {
         ?s a <${this.formTargetClass}> ;
           <${field.property}> ?value.
       }
@@ -468,6 +472,7 @@ export default {
       return bindings.map((row) => {
         return {
           value: row.get("value").value,
+          subject: row.get("s").value,
         };
       });
     },
@@ -501,7 +506,8 @@ export default {
         this.errors.push("No ex:Submit policy found for this form.");
         return;
       }
-      const data = this.parseSubmitData();
+      const subject = this.subject === 'Other' ? this.otherSubject : this.subject;
+      const data = this.parseSubmitData(subject, this.fields);
 
       let redirectPolicy;
       let success = true;
@@ -511,6 +517,8 @@ export default {
           success = (await this.submitHttpRequest(policy, data)) && success;
         } else if (policy.executionTarget === "http://example.org/redirect") {
           redirectPolicy = policy;
+        } else if (policy.executionTarget === 'http://example.org/n3Patch') {
+          success = (await this.submitN3Patch(policy, data)) && success;
         } else {
           this.errors.push("Unknown execution target: " + policy.executionTarget);
         }
@@ -558,24 +566,23 @@ export default {
         };
       });
     },
-    parseSubmitData() {
-      const subject = this.subject === 'Other' ? this.otherSubject : this.subject;
-      let data = `<${subject}> a <${this.formTargetClass}> .\n`;
+    parseSubmitData(subject, fields) {
+      let data = subject ? `<${subject}> a <${this.formTargetClass}> .\n` : '';
 
-      for (const field of this.fields) {
+      for (const field of fields) {
         for (const value of field.values) {
           if (!value.value?.trim()) {
             continue;
           }
           console.log(`Field: ${field.property} has value`, value);
           if (field.type === "SingleLineTextField" || field.type === "MultiLineTextField") {
-            data += `<${subject}> <${field.property}> "${value.value}" .\n`;
+            data += `<${subject || value.subject}> <${field.property}> "${value.value}" .\n`;
           } else if (field.type === "Choice") {
-            data += `<${subject}> <${field.property}> <${value.value}> .\n`;
+            data += `<${subject || value.subject}> <${field.property}> <${value.value}> .\n`;
           } else if (field.type === "BooleanField") {
-            data += `<${subject}> <${field.property}> ${value.value ? "true" : "false"} .\n`;
+            data += `<${subject || value.subject}> <${field.property}> ${value.value ? "true" : "false"} .\n`;
           } else if (field.type === "DateField") {
-            data += `<${subject}> <${field.property}> "${new Date(
+            data += `<${subject || value.subject}> <${field.property}> "${new Date(
               value.value
             ).toISOString()}"^^<http://www.w3.org/2001/XMLSchema#date> .\n`;
           } else {
@@ -599,6 +606,51 @@ export default {
         return true;
       } else {
         this.errors.push("HTTP request failed: " + response.status);
+        return false;
+      }
+    },
+    async submitN3Patch(policy, data) {
+      let body = `
+        @prefix solid: <http://www.w3.org/ns/solid/terms#>.
+        _:test a solid:InsertDeletePatch;
+          solid:inserts {
+            ${data}
+          }
+        `;
+
+      let dataToDelete = this.parseSubmitData(undefined, this.originalFields);
+      if (dataToDelete) {
+        const subjects = new Set();
+        for (const field of this.originalFields) {
+          for (const value of field.values) {
+            if (value.subject) {
+              subjects.add(value.subject);
+            }
+          }
+        }
+        dataToDelete = [...subjects].map(subject => `<${subject}> a  <${this.formTargetClass}> .`).join('\n') + '\n' + dataToDelete;
+
+        body += `;
+          solid:deletes {
+            ${dataToDelete}
+          }.`;
+      } else {
+        body += '.';
+      }
+
+      const response = await fetch(policy.url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "text/n3",
+        },
+        body: body,
+      });
+
+      if (response.ok) {
+        this.successes.push("Form submitted successfully via N3 Patch.");
+        return true;
+      } else {
+        this.errors.push("N3 Patch request failed: " + response.status);
         return false;
       }
     },

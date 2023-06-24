@@ -75,6 +75,24 @@ Likewise, a policy can be defined that will redirect the user to another page wh
 } .
 ```
 
+Lastly, a policy can be defined that will do a N3 Patch request. This is useful for appending data to a Solid resource.
+
+```turtle
+@prefix pol: <https://www.example.org/ns/policy#> .
+@prefix fno: <https://w3id.org/function/ontology#> .
+@prefix ex: <http://example.org/> .
+
+{
+    ?id ex:event ex:Submit.
+} => {
+    ex:RedirectPolicy pol:policy [
+        a fno:Execution ;
+        fno:executes ex:n3Patch ;
+        ex:url <https://httpbin.org/patch>
+  ] .
+} .
+```
+
 
 ## Recommended IDE Setup
 
