@@ -21,4 +21,5 @@ export default defineConfig({
     global: "window",
     "process.env": {},
   },
+  base: "/FormRenderer/",
 });
