@@ -1,14 +1,31 @@
-name: Build Vue
-on: [push]
+name: Build and Deploy
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request: {}
 jobs:
-  build_vue:
-    runs-on: ubuntu-latest
-    name: Build Vue
-    steps:
-    - uses: actions/checkout@v2
-    - id: Build-Vue
-      uses: xRealNeon/VuePagesAction@1.0.1
-      with:
-        username: 'SolidLabResearch'
-        reponame: 'FormRenderer'
-        token: ${{ secrets.GITHUB_TOKEN }} # Leave this line unchanged
+   build-and-deploy:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout 🛎️
+         uses: actions/checkout@v3
+
+       - name: Setup Node ✨
+         uses: actions/setup-node@v3
+         with:
+           node-version: 16.x
+           cache: npm
+
+       - name: Install and Build 🔧
+         run: |
+           npm ci
+           npm run build
+       - name: Deploy 🚀
+         uses: JamesIves/github-pages-deploy-action@3.6.2
+         with:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           BRANCH: pages
+           FOLDER: output
+           CLEAN: true
