@@ -509,7 +509,7 @@ export default {
         return;
       }
       const subject = this.subject === 'Other' ? this.otherSubject : this.subject;
-      const data = this.parseSubmitData(subject, this.fields);
+      const data = this.parseSubmitData(subject, this.formUrl, this.fields);
 
       let redirectPolicy;
       let success = true;
@@ -568,8 +568,12 @@ export default {
         };
       });
     },
-    parseSubmitData(subject, fields) {
+    parseSubmitData(subject, generatedBy, fields) {
       let data = subject ? `<${subject}> a <${this.formTargetClass}> .\n` : '';
+
+      if (generatedBy && subject) {
+        data += `<${subject}> a <http://www.w3.org/ns/prov#Entity>; <http://www.w3.org/ns/prov#wasGeneratedBy> <${generatedBy}> .\n`;
+      }
 
       for (const field of fields) {
         for (const value of field.values) {
@@ -620,7 +624,7 @@ export default {
           }
         `;
 
-      let dataToDelete = this.parseSubmitData(undefined, this.originalFields);
+      let dataToDelete = this.parseSubmitData(undefined, undefined, this.originalFields);
       if (dataToDelete) {
         const subjects = new Set();
         for (const field of this.originalFields) {
@@ -630,7 +634,7 @@ export default {
             }
           }
         }
-        dataToDelete = [...subjects].map(subject => `<${subject}> a  <${this.formTargetClass}> .`).join('\n') + '\n' + dataToDelete;
+        dataToDelete = [...subjects].map(subject => `<${subject}> a <${this.formTargetClass}>; a <http://www.w3.org/ns/prov#Entity>; <http://www.w3.org/ns/prov#wasGeneratedBy> <${this.formUrl}> .`).join('\n') + '\n' + dataToDelete;
 
         body += `;
           solid:deletes {
