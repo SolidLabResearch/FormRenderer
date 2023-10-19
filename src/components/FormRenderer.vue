@@ -572,7 +572,7 @@ export default {
       let data = subject ? `<${subject}> a <${this.formTargetClass}> .\n` : '';
 
       if (generatedBy && subject) {
-        data += `<${subject}> a <http://www.w3.org/ns/prov#Entity>; <http://www.w3.org/ns/prov#wasGeneratedBy> <${generatedBy}> .\n`;
+        data += `<${subject}> <http://www.w3.org/ns/prov#wasGeneratedBy> <${generatedBy}> .\n`;
       }
 
       for (const field of fields) {
@@ -634,7 +634,7 @@ export default {
             }
           }
         }
-        dataToDelete = [...subjects].map(subject => `<${subject}> a <${this.formTargetClass}>; a <http://www.w3.org/ns/prov#Entity>; <http://www.w3.org/ns/prov#wasGeneratedBy> <${this.formUrl}> .`).join('\n') + '\n' + dataToDelete;
+        dataToDelete = [...subjects].map(subject => `<${subject}> a <${this.formTargetClass}>; <http://www.w3.org/ns/prov#wasGeneratedBy> <${this.formUrl}> .`).join('\n') + '\n' + dataToDelete;
 
         body += `;
           solid:deletes {
