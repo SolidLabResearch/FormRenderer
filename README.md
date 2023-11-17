@@ -7,7 +7,7 @@ This application natively supports the Solid-UI vocabulary for its input form de
 N3 rules containing the mapping from any vocabulary to Solid-UI, it is possible to render any form definition that can
 be represented in RDF.
 
-To generate such form definition, one can use the [smessie/FormGenerator](https://github.com/smessie/FormGenerator) app.
+To generate such form definition, one can use the [SolidLabResearch/FormGenerator](https://github.com/SolidLabResearch/FormGenerator) app.
 
 ## Notes on the input files
 
@@ -70,7 +70,7 @@ Likewise, a policy can be defined that will redirect the user to another page wh
     ex:RedirectPolicy pol:policy [
         a fno:Execution ;
         fno:executes ex:redirect ;
-        ex:url <https://formgenerator.smessie.com>
+        ex:url <https://smessaert.be>
   ] .
 } .
 ```
@@ -143,4 +143,4 @@ npm run lint
 
 A very simple form definition in SHACL is passed along together with the rules that are enough to map this definition to Solid-UI.
 
-https://formrenderer.smessie.com/?doc=https://solid.smessie.com/private/tests/forms/form-content.ttl&rules=https://solid.smessie.com/private/tests/forms/form-rules.n3&form=https://solid.smessie.com/private/tests/forms/form-content-shacl.ttl%237a48ecdc-80f5-4c1d-86c0-13a93c22c2f2
+https://solidlabresearch.github.io/FormRenderer/?doc=https://solid.smessie.com/thesis/forms/antwoord-15.ttl&rules=https://solid.smessie.com/thesis/forms/shacl-to-ui.n3&form=https://solid.smessie.com/thesis/forms/form.n3%23242ca810-0b3e-4112-8144-934ebb1779dc
