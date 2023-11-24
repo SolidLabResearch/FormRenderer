@@ -191,6 +191,7 @@ export default {
 
     // Restore solid session
     handleIncomingRedirect({
+      url: window.location.href,
       restorePreviousSession: true,
     }).then((info) => {
       this.loggedIn = info.webId;
