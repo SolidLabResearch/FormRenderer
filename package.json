@@ -11,8 +11,9 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
-    "@comunica/query-sparql": "^2.6.9",
-    "@inrupt/solid-client-authn-browser": "^1.12.3",
+    "@comunica/query-sparql": "^2.10.0",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@inrupt/solid-client-authn-browser": "^1.17.5",
     "eyereasoner": "^4.21.3",
     "mdb-vue-ui-kit": "^3.2.0",
     "uuid": "^9.0.0",

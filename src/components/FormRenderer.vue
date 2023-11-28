@@ -119,6 +119,8 @@ import DateField from "@/components/fields/DateField.vue";
 import ChoiceField from "@/components/fields/ChoiceField.vue";
 import {n3reasoner} from "eyereasoner";
 
+const engine = new QueryEngine();
+
 export default {
   name: "FormRenderer",
   components: {
@@ -153,7 +155,6 @@ export default {
       subjectPossibilities: [],
       otherSubject: "",
       otherSubjectError: "",
-      engine: new QueryEngine(),
       fields: [],
       originalFields: [],
       errors: [],
@@ -320,7 +321,7 @@ export default {
       }
       `;
       const bindings = await (
-          await this.engine.queryBindings(query, {
+          await engine.queryBindings(query, {
             sources: [
               {
                 type: "stringSource",
@@ -380,7 +381,7 @@ export default {
       `;
 
       const bindings = await (
-          await this.engine.queryBindings(query, {
+          await engine.queryBindings(query, {
             sources: [
               {
                 type: "stringSource",
@@ -423,7 +424,7 @@ export default {
           `;
 
           const bindings = await (
-              await this.engine.queryBindings(query, {
+              await engine.queryBindings(query, {
                 sources: [
                   {
                     type: "stringSource",
@@ -460,7 +461,7 @@ export default {
       `;
 
       const bindings = await (
-          await this.engine.queryBindings(query, {
+          await engine.queryBindings(query, {
             sources: [
               {
                 type: "stringSource",
@@ -548,7 +549,7 @@ export default {
       }
       `;
       const bindings = await (
-          await this.engine.queryBindings(queryPolicy, {
+          await engine.queryBindings(queryPolicy, {
             sources: [
               {
                 type: "stringSource",
