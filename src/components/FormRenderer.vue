@@ -109,7 +109,7 @@
 
 <script>
 import {MDBBtn, MDBCard, MDBCardBody, MDBCardText, MDBCardTitle, MDBContainer, MDBInput} from "mdb-vue-ui-kit";
-import {fetch, getDefaultSession, handleIncomingRedirect, login, logout} from "@inrupt/solid-client-authn-browser";
+import {fetch, getDefaultSession, handleIncomingRedirect, login, logout} from "@smessie/solid-client-authn-browser";
 import {QueryEngine} from "@comunica/query-sparql";
 import {v4 as uuid} from "uuid";
 import SingleLineTextField from "@/components/fields/SingleLineTextField.vue";
