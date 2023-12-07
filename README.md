@@ -2,6 +2,8 @@
 
 A form renderer app with Solid - Google Forms but the Solid way.
 
+[![DOI](https://zenodo.org/badge/602489958.svg)](https://zenodo.org/doi/10.5281/zenodo.10285209)
+
 This app allows one to render a form definition together with data to be inserted into the form in a declarative way.
 This application natively supports the Solid-UI vocabulary for its input form definition but by passing along a set of
 N3 rules containing the mapping from any vocabulary to Solid-UI, it is possible to render any form definition that can
