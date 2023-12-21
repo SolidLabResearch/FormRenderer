@@ -37,24 +37,31 @@ An example of such a rule is the following where we go from a definition using t
 ```
 
 The form description file should also contain some data that describes what should happen with the data when the submit button is pressed. This is called the footprint tasks.
-For this, a basic version of the [Function Ontology (FnO)](https://w3id.org/function/spec) and the policy concept as first described in the [Orchestrator spec](https://mellonscholarlycommunication.github.io/spec-orchestrator/#policy-sec) and [Koreographeye](https://github.com/eyereasoner/Koreografeye) are used.
+For this, a basic version of the [Function Ontology (FnO)](https://w3id.org/function/spec) and the policy concept as first described in the [Orchestrator spec](https://mellonscholarlycommunication.github.io/spec-orchestrator/#policy-sec) and [Koreographeye](https://github.com/eyereasoner/Koreografeye) are used,
+together with the [Policy ontology](https://w3id.org/DFDP/policy) and the [HTTP Vocabulary](https://www.w3.org/TR/HTTP-in-RDF10/).
 The following example shows how to define a policy that will be executed when the submit button is pressed.
 Multiple policies are supported.
 
 ```turtle
-@prefix pol: <https://www.example.org/ns/policy#> .
+@prefix pol: <https://w3id.org/DFDP/policy#> .
 @prefix fno: <https://w3id.org/function/ontology#> .
+@prefix http: <http://www.w3.org/2011/http#> .
 @prefix ex: <http://example.org/> .
 
 {
-    ?id ex:event ex:Submit.
+    <formUri> ex:event ex:Submit.
 } => {
     ex:PostPolicy pol:policy [
         a fno:Execution ;
-        fno:executes ex:httpRequest ;
-        ex:method "POST" ;
-        ex:url <https://httpbin.org/post> ;
-        ex:contentType "application/ld+json"
+        fno:executes http:Request ;
+        http:methodName "POST" ;
+        http:requestURI <https://httpbin.org/post> ;
+        http:headers (
+            [
+               http:fieldName "Content-Type";
+               http:fieldValue "application/ld+json"
+            ]
+        )
     ] .
 }.
 ```
@@ -62,17 +69,18 @@ Multiple policies are supported.
 Likewise, a policy can be defined that will redirect the user to another page when the submit button is pressed.
 
 ```turtle
-@prefix pol: <https://www.example.org/ns/policy#> .
+@prefix pol: <https://w3id.org/DFDP/policy#> .
 @prefix fno: <https://w3id.org/function/ontology#> .
+@prefix http: <http://www.w3.org/2011/http#> .
 @prefix ex: <http://example.org/> .
 
 {
-    ?id ex:event ex:Submit.
+    <formUri> pol:event pol:Submit.
 } => {
     ex:RedirectPolicy pol:policy [
         a fno:Execution ;
-        fno:executes ex:redirect ;
-        ex:url <https://smessaert.be>
+        fno:executes pol:Redirect ;
+        http:requestURI <https://smessaert.be>
   ] .
 } .
 ```
@@ -80,17 +88,19 @@ Likewise, a policy can be defined that will redirect the user to another page wh
 Lastly, a policy can be defined that will do a N3 Patch request. This is useful for appending data to a Solid resource.
 
 ```turtle
-@prefix pol: <https://www.example.org/ns/policy#> .
+@prefix pol: <https://w3id.org/DFDP/policy#> .
 @prefix fno: <https://w3id.org/function/ontology#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+@prefix solid: <http://www.w3.org/ns/solid/terms#> .
 @prefix ex: <http://example.org/> .
 
 {
-    ?id ex:event ex:Submit.
+    <formUri> pol:event pol:Submit.
 } => {
     ex:RedirectPolicy pol:policy [
         a fno:Execution ;
-        fno:executes ex:n3Patch ;
-        ex:url <https://httpbin.org/patch>
+        fno:executes solid:InsertDeletePatch ;
+        http:requestURI <https://httpbin.org/patch>
   ] .
 } .
 ```

@@ -277,7 +277,7 @@ export default {
         // Apply schema alignment rules
         const n3rules = await this.loadContentOfUrl(this.rules);
 
-        const options = {blogic: false, outputType: "string"};
+        const options = {outputType: "string"};
         n3form = await n3reasoner(n3form, n3rules, options);
         console.log("n3form after rules", n3form);
       }
@@ -498,16 +498,16 @@ export default {
         return;
       }
 
-      const options = {blogic: false, outputType: "string"};
+      const options = {outputType: "string"};
       const reasonerResult = await n3reasoner(
-          `PREFIX ex: <http://example.org/>\n<${this.formUrl}> ex:event ex:Submit .`,
+          `PREFIX pol: <https://w3id.org/DFDP/policy#>\n<${this.formUrl}> pol:event pol:Submit .`,
           this.originalForm,
           options
       );
 
       const policies = await this.parseSubmitPolicy(reasonerResult);
       if (!policies) {
-        this.errors.push("No ex:Submit policy found for this form.");
+        this.errors.push("No pol:Submit policy found for this form.");
         return;
       }
       const subject = this.subject === 'Other' ? this.otherSubject : this.subject;
@@ -517,11 +517,11 @@ export default {
       let success = true;
 
       for (const policy of policies) {
-        if (policy.executionTarget === "http://example.org/httpRequest") {
+        if (policy.executionTarget === "http://www.w3.org/2011/http#Request") {
           success = (await this.submitHttpRequest(policy, data)) && success;
-        } else if (policy.executionTarget === "http://example.org/redirect") {
+        } else if (policy.executionTarget === "https://w3id.org/DFDP/policy#Redirect") {
           redirectPolicy = policy;
-        } else if (policy.executionTarget === 'http://example.org/n3Patch') {
+        } else if (policy.executionTarget === 'http://www.w3.org/ns/solid/terms#InsertDeletePatch') {
           success = (await this.submitN3Patch(policy, data)) && success;
         } else {
           this.errors.push("Unknown execution target: " + policy.executionTarget);
@@ -536,16 +536,17 @@ export default {
     async parseSubmitPolicy(doc) {
       const queryPolicy = `
       PREFIX ex: <http://example.org/>
-      PREFIX pol: <https://www.example.org/ns/policy#>
+      PREFIX pol: <https://w3id.org/DFDP/policy#>
       PREFIX fno: <https://w3id.org/function/ontology#>
+      PREFIX http: <http://www.w3.org/2011/http#>
 
       SELECT ?executionTarget ?method ?url ?contentType WHERE {
         ?id pol:policy ?policy .
         ?policy a fno:Execution .
         ?policy fno:executes ?executionTarget .
-        ?policy ex:url ?url .
-        OPTIONAL { ?policy ex:method ?method } .
-        OPTIONAL { ?policy ex:contentType ?contentType } .
+        ?policy http:requestURI ?url .
+        OPTIONAL { ?policy http:methodName ?method } .
+        OPTIONAL { ?policy http:headers ( [ http:fieldName "Content-Type" ; http:fieldValue ?contentType ] ) } .
       }
       `;
       const bindings = await (
@@ -554,7 +555,7 @@ export default {
               {
                 type: "stringSource",
                 value: doc,
-                mediaType: "text/n3",
+                mediaType: "text/turtle",
                 baseIRI: this.formUrl.split("#")[0],
               },
             ],
