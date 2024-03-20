@@ -1,0 +1,114 @@
+@prefix shacl: <http://www.w3.org/ns/shacl#>.
+@prefix ui: <http://www.w3.org/ns/ui#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix math: <http://www.w3.org/2000/10/swap/math#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#> .
+@prefix list: <http://www.w3.org/2000/10/swap/list#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix string: <http://www.w3.org/2000/10/swap/string#> .
+
+{
+    ?uri a shacl:NodeShape;
+        shacl:targetClass ?binding.
+} => {
+    ?uri a ui:Form;
+        ui:property ?binding;
+
+}.
+
+
+{
+    ?uri a shacl:NodeShape .
+    ( ?field { ?uri shacl:property ?field } ?List ) log:collectAllIn _:x .
+} => {
+    ?uri ui:parts ?List .
+}.
+
+
+{
+    ?uri a shacl:PropertyShape;
+        shacl:datatype xsd:date;
+        shacl:path ?binding.
+} => {
+    ?uri a ui:DateField;
+        ui:property ?binding.
+}.
+
+
+{
+    ?uri a shacl:PropertyShape;
+        shacl:datatype xsd:boolean;
+        shacl:path ?binding.
+} => {
+    ?uri a ui:BooleanField;
+        ui:property ?binding.
+}.
+
+
+{
+    ?uri a shacl:PropertyShape;
+        shacl:nodeKind shacl:IRI;
+        shacl:path ?binding.
+} => {
+    ?uri a ui:Choice;
+        ui:property ?binding.
+}.
+
+
+{
+    ?uri a shacl:PropertyShape;
+        shacl:datatype xsd:string;
+        shacl:path ?binding.
+} => {
+    ?uri a ui:SingleLineTextField;
+        ui:property ?binding.
+}.
+
+
+{
+    ?uri shacl:order ?order.
+} => {
+    ?uri ui:sequence ?order.
+}.
+
+
+{
+    ?uri shacl:name ?name.
+} => {
+    ?uri ui:label ?name.
+}.
+
+
+{
+    ?uri shacl:minCount ?minCount.
+    ?minCount math:greaterThan 0.
+} => {
+    ?uri ui:required true.
+}.
+
+
+{
+    ?uri shacl:maxCount ?maxCount.
+    ?maxCount math:greaterThan 1.
+} => {
+    ?uri ui:multiple true.
+}.
+
+
+{
+    ?uri a shacl:PropertyShape;
+        shacl:nodeKind shacl:IRI;
+        shacl:in ?options.
+    ?options list:iterate ( ?i ?option ) .
+    ?option rdfs:label ?label .
+    ?uri log:uri ?uriString .
+    ( ?uriString "-options" ) string:concatenation ?optionsUriString .
+    ?optionsUri log:uri ?optionsUriString .
+} => {
+    ?uri ui:from ?optionsUri .
+    ?optionsUri a owl:Class .
+    ?option a ?optionsUri ;
+        skos:prefLabel ?label .
+} .

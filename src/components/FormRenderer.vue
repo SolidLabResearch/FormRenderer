@@ -39,7 +39,9 @@
           <MDBInput label="Dataset URL" type="url" v-model="doc"/>
           <small class="text-danger" v-if="docError">{{ docError }}</small>
           <MDBInput label="N3 Conversion Rules URL" type="url" v-model="rules" style="margin-top: 1rem"/>
-          <small>Leave this URL empty to not apply any schema alignment tasks.</small>
+          <small>Leave this URL empty to not apply any schema alignment tasks. <a href="#"
+                                                                                  @click="insertDefaultRulesUrl">Click
+            here to insert a SHACL to UI ontology conversion rules URL.</a></small>
           <small class="text-danger" v-if="rulesError"><br>{{ rulesError }}</small>
           <MDBInput label="Form description URI" type="url" v-model="formUrl" style="margin-top: 1rem"/>
           <small>URI to the specific form in the form description document.</small>
@@ -701,6 +703,9 @@ export default {
       }
       return valid;
     },
+    insertDefaultRulesUrl() {
+      this.rules = new URL(window.location.href).origin + new URL(window.location.href).pathname + 'shacl-to-ui.n3';
+    }
   },
   watch: {
     doc: function () {
